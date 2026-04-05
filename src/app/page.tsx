@@ -1,22 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useGame, Buildings, getProductionRate, UNIT_ATLAS, Units, BUILDING_REQUIREMENTS } from '@/context/GameContext';
+import { useGame, Buildings, getProductionRate, UNIT_ATLAS, Units, BUILDING_REQUIREMENTS, getMaxPopulation, getCurrentPopulation } from '@/context/GameContext';
 import { BUILDING_META, formatTime } from '@/utils/shared';
 
-const BUILDING_ORDER: (keyof Buildings)[] = ['headquarters', 'barracks', 'stable', 'castle', 'palace', 'cityWall', 'timberCamp', 'ironMine', 'clayPit', 'warehouse', 'farm'];
+const BUILDING_ORDER: (keyof Buildings)[] = ['headquarters', 'barracks', 'stable', 'castle', 'palace', 'cityWall', 'timberCamp', 'ironMine', 'clayPit', 'warehouse', 'farm', 'granary', 'huntersLodge', 'fishery', 'residence'];
 
 export default function Home() {
   const { state, activeVillage, upgradeBuilding, recruitUnit, MAX_LEVELS } = useGame();
   const [selectedBuilding, setSelectedBuilding] = useState<keyof Buildings | null>(null);
   const [, setForceRender] = useState(0);
-
-  // Placement tool state
-  const [placementMode, setPlacementMode] = useState(false);
-  const [placementIndex, setPlacementIndex] = useState(0);
-  const [customPositions, setCustomPositions] = useState<Record<string, { x: string; y: string }>>({});
-  const mapRef = useRef<HTMLDivElement>(null);
+  const [recruitCounts, setRecruitCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const timer = setInterval(() => setForceRender(prev => prev + 1), 100);
@@ -29,7 +24,14 @@ export default function Home() {
     </div>
   );
 
-  const vBuildings = activeVillage.buildings!;
+  const rawB = activeVillage.buildings!;
+  const vBuildings: Buildings = {
+    headquarters: rawB.headquarters ?? 0, timberCamp: rawB.timberCamp ?? 0, clayPit: rawB.clayPit ?? 0,
+    ironMine: rawB.ironMine ?? 0, warehouse: rawB.warehouse ?? 0, granary: rawB.granary ?? 0,
+    cityWall: rawB.cityWall ?? 0, barracks: rawB.barracks ?? 0, stable: rawB.stable ?? 0,
+    castle: rawB.castle ?? 0, palace: rawB.palace ?? 0, farm: rawB.farm ?? 0,
+    huntersLodge: rawB.huntersLodge ?? 0, fishery: rawB.fishery ?? 0, residence: rawB.residence ?? 0,
+  };
   const vResources = activeVillage.resources!;
   const vUnits = activeVillage.units!;
   const vUpgrades = activeVillage.upgrades || [];
@@ -134,6 +136,21 @@ export default function Home() {
                       {(selectedBuilding === 'barracks' || selectedBuilding === 'headquarters') && (
                         `Speed Bonus: ${(Math.pow(1.15, level === 0 ? 0 : level - 1)).toFixed(2)}x ➔ ${(Math.pow(1.15, targetLevel - 1)).toFixed(2)}x`
                       )}
+                      {selectedBuilding === 'farm' && (
+                        `Grain: ${Math.floor(level === 0 ? 0 : 50 * Math.pow(1.15, level - 1))}/h ➔ ${Math.floor(50 * Math.pow(1.15, targetLevel - 1))}/h`
+                      )}
+                      {selectedBuilding === 'huntersLodge' && (
+                        `Meat: ${Math.floor(level === 0 ? 0 : 30 * Math.pow(1.15, level - 1))}/h ➔ ${Math.floor(30 * Math.pow(1.15, targetLevel - 1))}/h`
+                      )}
+                      {selectedBuilding === 'fishery' && (
+                        `Fish: ${Math.floor(level === 0 ? 0 : 40 * Math.pow(1.15, level - 1))}/h ➔ ${Math.floor(40 * Math.pow(1.15, targetLevel - 1))}/h`
+                      )}
+                      {selectedBuilding === 'granary' && (
+                        `Food Storage: ${(level === 0 ? 500 : Math.floor(3000 * Math.pow(1.3, level - 1))).toLocaleString()} ➔ ${Math.floor(3000 * Math.pow(1.3, targetLevel - 1)).toLocaleString()}`
+                      )}
+                      {selectedBuilding === 'residence' && (
+                        `Max Pop: ${(level === 0 ? 10 : Math.floor(20 * Math.pow(1.25, level - 1))).toLocaleString()} ➔ ${Math.floor(20 * Math.pow(1.25, targetLevel - 1)).toLocaleString()}`
+                      )}
                     </div>
                   </div>
                   <div className="flex justify-center gap-6 mb-6 font-mono text-xs font-bold border-y border-outline-variant py-4 bg-surface-dim">
@@ -153,32 +170,67 @@ export default function Home() {
               )}
             </div>
 
-            {['barracks','stable','castle','palace'].includes(selectedBuilding) && level > 0 && (
+            {['barracks','stable','castle','palace'].includes(selectedBuilding) && level > 0 && (() => {
+              const currentPop = getCurrentPopulation(vUnits, activeVillage.recruitment);
+              const maxPop = getMaxPopulation(vBuildings.residence || 0);
+              return (
               <div className="mt-4 bg-[#242426] p-4 rounded-lg border border-[#333]">
-                <h3 className="text-gray-300 mb-3 text-sm font-bold uppercase tracking-widest">Train Military</h3>
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-gray-300 text-sm font-bold uppercase tracking-widest">Train Military</h3>
+                  <span className={`text-[10px] font-mono font-bold ${currentPop >= maxPop ? 'text-red-400' : 'text-gray-500'}`}>
+                    👥 {currentPop}/{maxPop} pop
+                  </span>
+                </div>
                 <div className="grid grid-cols-1 gap-2">
                   {Object.entries(UNIT_ATLAS)
                     .filter(([, data]) => data.reqB === selectedBuilding)
                     .map(([unitKey, data]) => {
                        const canRecruit = level >= data.reqLvl;
+                       const popLeft = maxPop - currentPop;
+                       const maxByPop = Math.floor(popLeft / data.pop);
+                       const count = recruitCounts[unitKey] || 1;
                        return (
-                        <button key={unitKey} onClick={() => recruitUnit(unitKey as keyof Units)} disabled={!canRecruit} className="bg-[#1e1e1e] border border-[#555] hover:border-amber-500 disabled:opacity-30 disabled:hover:border-[#555] text-xs py-3 rounded text-left px-3 flex flex-col sm:flex-row justify-between sm:items-center group">
-                          <span className="text-gray-300 font-bold group-hover:text-amber-400 text-sm mb-2 sm:mb-0">
-                            {data.name} {!canRecruit && <span className="text-red-500 text-[10px] uppercase ml-2">(Requires Lv.{data.reqLvl})</span>}
-                          </span>
-                          <span className="bg-gray-800 text-gray-400 font-mono px-2 py-1 flex items-center gap-2 rounded text-[10px]">
-                            <span className="text-[#a1662f]">{data.w}</span>|
-                            <span className="text-[#c55331]">{data.c}</span>|
-                            <span className="text-[#9ca3af]">{data.i}</span>
-                            <span className="ml-2 text-gray-500 text-right">⏱️{formatTime(data.time)}</span>
-                          </span>
-                        </button>
+                        <div key={unitKey} className={`bg-[#1e1e1e] border border-[#555] rounded px-3 py-2 ${!canRecruit ? 'opacity-30' : ''}`}>
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-gray-300 font-bold text-sm">
+                              {data.name}
+                              {!canRecruit && <span className="text-red-500 text-[10px] uppercase ml-2">(Req Lv.{data.reqLvl})</span>}
+                            </span>
+                            <span className="text-[9px] text-gray-600 font-mono">
+                              {data.pop} pop | {data.grain > 0 ? `🌾${data.grain}` : data.fish > 0 ? `🐟${data.fish}` : `🥩${data.meat}`}/h
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] font-mono text-gray-500 mb-2">
+                            <span className="text-wood">🪵{data.w * count}</span>
+                            <span className="text-clay">🧱{data.c * count}</span>
+                            <span className="text-iron">⛏️{data.i * count}</span>
+                            <span className="text-gray-600 ml-auto">⏱️{formatTime(data.time * count)}</span>
+                          </div>
+                          {canRecruit && (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number" min={1} max={Math.max(1, maxByPop)}
+                                value={count}
+                                onChange={e => setRecruitCounts({ ...recruitCounts, [unitKey]: Math.max(1, parseInt(e.target.value) || 1) })}
+                                className="w-16 bg-black/50 border border-outline-variant rounded text-white px-2 py-1 text-[10px] outline-none focus:border-primary/50 font-mono text-center"
+                              />
+                              <button
+                                onClick={() => { recruitUnit(unitKey as keyof Units, count); setRecruitCounts({ ...recruitCounts, [unitKey]: 1 }); }}
+                                disabled={maxByPop <= 0}
+                                className="flex-1 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded text-[10px] font-bold uppercase tracking-widest transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+                              >
+                                Train {count > 1 ? `×${count}` : ''}
+                              </button>
+                            </div>
+                          )}
+                        </div>
                        );
                     })
                   }
                 </div>
               </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       </div>
@@ -188,8 +240,7 @@ export default function Home() {
   const isBuildingQueued = (id: keyof Buildings) => vUpgrades.some(u => u.building === id);
   const isBuildingLocked = (id: keyof Buildings) => BUILDING_REQUIREMENTS[id].some(r => (vBuildings[r.requires] || 0) < r.level);
 
-  // Building positions — default or custom from placement tool
-  const DEFAULT_POSITIONS: Record<keyof Buildings, { x: string; y: string }> = {
+  const BUILDING_POSITIONS: Record<keyof Buildings, { x: string; y: string }> = {
     headquarters: { x: '49.9%', y: '44.2%' },
     barracks:     { x: '42.1%', y: '59.2%' },
     stable:       { x: '58.6%', y: '59.2%' },
@@ -201,35 +252,16 @@ export default function Home() {
     clayPit:      { x: '29.2%', y: '82.0%' },
     warehouse:    { x: '49.8%', y: '87.2%' },
     farm:         { x: '38.0%', y: '75.0%' },
+    granary:      { x: '55.0%', y: '85.0%' },
+    huntersLodge: { x: '22.0%', y: '30.0%' },
+    fishery:      { x: '78.0%', y: '80.0%' },
+    residence:    { x: '42.0%', y: '38.0%' },
   };
-
-  const BUILDING_POSITIONS = { ...DEFAULT_POSITIONS, ...customPositions } as Record<keyof Buildings, { x: string; y: string }>;
-
-  // Placement tool click handler
-  const handlePlacementClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!placementMode || !mapRef.current) return;
-    const rect = mapRef.current.getBoundingClientRect();
-    const xPct = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
-    const yPct = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
-    const building = BUILDING_ORDER[placementIndex];
-
-    setCustomPositions(prev => ({ ...prev, [building]: { x: `${xPct}%`, y: `${yPct}%` } }));
-
-    if (placementIndex < BUILDING_ORDER.length - 1) {
-      setPlacementIndex(prev => prev + 1);
-    } else {
-      // Done — log all positions for copy-paste
-      const allPos = { ...DEFAULT_POSITIONS, ...customPositions, [building]: { x: `${xPct}%`, y: `${yPct}%` } };
-      console.log('=== BUILDING POSITIONS — Copy this into your code ===');
-      console.log(JSON.stringify(allPos, null, 2));
-      setPlacementMode(false);
-    }
-  }, [placementMode, placementIndex, customPositions]);
 
   return (
     <>
       {renderBuildingModal()}
-      <div ref={mapRef} className="flex-1 min-h-0 w-full relative overflow-hidden bg-[#0d0a06]" onClick={placementMode ? handlePlacementClick : undefined}>
+      <div className="flex-1 min-h-0 w-full relative overflow-hidden bg-[#0d0a06]">
 
         {/* Village Map Background */}
         <Image
@@ -243,59 +275,14 @@ export default function Home() {
         />
 
         {/* Building nodes overlay */}
-        {!placementMode && (
-          <div className="absolute inset-0">
-            {BUILDING_ORDER.map(id => {
-              const pos = BUILDING_POSITIONS[id];
-              return (
-                <MapNode key={id} id={id} x={pos.x} y={pos.y} activeVillage={activeVillage} MAX_LEVELS={MAX_LEVELS} isQueued={isBuildingQueued(id)} isLocked={isBuildingLocked(id)} onClick={() => setSelectedBuilding(id)} />
-              );
-            })}
-          </div>
-        )}
-
-        {/* Placement mode: show already-placed markers */}
-        {placementMode && (
-          <div className="absolute inset-0">
-            {BUILDING_ORDER.slice(0, placementIndex).map(id => {
-              const pos = customPositions[id] || DEFAULT_POSITIONS[id];
-              return (
-                <div key={id} className="absolute -translate-x-1/2 -translate-y-1/2 z-30" style={{ left: pos.x, top: pos.y }}>
-                  <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-lg" />
-                  <span className="absolute top-5 left-1/2 -translate-x-1/2 text-[8px] text-green-300 bg-black/80 px-1.5 py-0.5 rounded whitespace-nowrap font-bold">
-                    {BUILDING_META[id].name}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Placement tool UI */}
-        {placementMode && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 glass-panel px-6 py-3 rounded-lg border border-primary/30 shadow-2xl text-center">
-            <div className="text-[9px] text-gray-400 uppercase tracking-widest mb-1">Click to place building {placementIndex + 1}/{BUILDING_ORDER.length}</div>
-            <div className="text-lg text-primary font-bold medieval-font tracking-widest">
-              {BUILDING_META[BUILDING_ORDER[placementIndex]].icon} {BUILDING_META[BUILDING_ORDER[placementIndex]].name}
-            </div>
-            <button onClick={(e) => { e.stopPropagation(); setPlacementMode(false); }} className="mt-2 text-[9px] text-gray-500 hover:text-red-400 uppercase tracking-widest">Cancel</button>
-          </div>
-        )}
-
-        {/* Placement mode toggle button */}
-        {!placementMode && (
-          <button
-            onClick={() => { setPlacementMode(true); setPlacementIndex(0); setCustomPositions({}); }}
-            className="absolute bottom-4 left-4 z-40 text-[9px] bg-purple-900/60 hover:bg-purple-900/80 text-purple-300 border border-purple-500/30 px-3 py-1.5 rounded font-bold uppercase tracking-widest transition-all"
-          >
-            🎯 Place Buildings
-          </button>
-        )}
-
-        {/* Crosshair cursor in placement mode */}
-        {placementMode && (
-          <style>{`div[class*="flex-1 min-h-0 w-full"] { cursor: crosshair !important; }`}</style>
-        )}
+        <div className="absolute inset-0">
+          {BUILDING_ORDER.map(id => {
+            const pos = BUILDING_POSITIONS[id];
+            return (
+              <MapNode key={id} id={id} x={pos.x} y={pos.y} activeVillage={activeVillage} MAX_LEVELS={MAX_LEVELS} isQueued={isBuildingQueued(id)} isLocked={isBuildingLocked(id)} onClick={() => setSelectedBuilding(id)} />
+            );
+          })}
+        </div>
       </div>
     </>
   );

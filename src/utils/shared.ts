@@ -18,7 +18,11 @@ export const BUILDING_META: Record<keyof Buildings, { name: string, desc: string
   stable: { name: "Stable", desc: "Breed warhorses and train devastating cavalry units.", icon: "🐎", image: "/images/stable.png" },
   castle: { name: "Castle", desc: "A magnificent fortress to train your loyal Knight.", icon: "🛡️", image: "/images/castle.png" },
   palace: { name: "Palace", desc: "The seat of authority. Grants the ability to train Noblemen to conquer villages.", icon: "👑", image: "/images/palace.png" },
-  farm: { name: "Farm", desc: "Produces food to sustain your army. Without food, soldiers desert.", icon: "🌾", image: "/images/headquarters.png" },
+  farm: { name: "Farm", desc: "Produces grain to feed your infantry. The backbone of your food supply.", icon: "🌾", image: "/images/headquarters.png" },
+  granary: { name: "Granary", desc: "Stores grain, meat and fish. Increase level to hold more food.", icon: "🏪", image: "/images/warehouse.png" },
+  huntersLodge: { name: "Hunter's Lodge", desc: "Hunters provide meat to feed your cavalry and elite units.", icon: "🏹", image: "/images/barracks.png" },
+  fishery: { name: "Fishery", desc: "Catches fish from the river. Fish supplements both grain and meat.", icon: "🐟", image: "/images/headquarters.png" },
+  residence: { name: "Residence", desc: "Houses for your population. Higher level allows more soldiers to be stationed.", icon: "🏠", image: "/images/headquarters.png" },
 };
 export const calculateDistance = (x1: number, y1: number, x2: number, y2: number) => {
   return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));

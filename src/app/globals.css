@@ -5,31 +5,31 @@
   --color-primary: #ffc63e;
   --color-primary-container: #e3aa00;
   --color-on-primary: #402d00;
-  
+
   /* Resources */
-  --color-wood: #a1662f;
-  --color-clay: #c55331;
-  --color-iron: #9ca3af;
+  --color-wood: #c4813a;
+  --color-clay: #e06840;
+  --color-iron: #b0bcc9;
   --color-amber: #ffb700;
-  
-  /* Surface Hierarchy (The Illuminated Archive) */
-  --color-bg-base: #111316;
-  --color-surface-dim: #111316;
-  --color-surface-low: #1a1c1f;
-  --color-surface-base: #1e2023;
-  --color-surface-high: #282a2d;
-  --color-surface-highest: #333538;
-  
-  /* Accents */
-  --color-outline-variant: rgba(77, 70, 53, 0.15);
+
+  /* Surface Hierarchy — higher contrast */
+  --color-bg-base: #0e1013;
+  --color-surface-dim: #0e1013;
+  --color-surface-low: #181a1e;
+  --color-surface-base: #1c1f24;
+  --color-surface-high: #262a30;
+  --color-surface-highest: #363a42;
+
+  /* Accents — more visible borders */
+  --color-outline-variant: rgba(100, 90, 70, 0.35);
   --color-tertiary: #ffc19b;
 }
 
 
 :root {
   --background: var(--color-bg-base);
-  --foreground: #e2e2e6;
-  --on-surface-variant: #d0c5af;
+  --foreground: #e8e8ec;
+  --on-surface-variant: #ddd2b8;
 }
 
 body {
@@ -70,9 +70,9 @@ h1, h2, h3, h4, .medieval-font {
 }
 
 .glass-panel {
-  background: rgba(51, 53, 56, 0.4);
+  background: rgba(51, 53, 56, 0.55);
   backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 198, 62, 0.05);
+  border: 1px solid rgba(255, 198, 62, 0.1);
 }
 
 .gold-button {

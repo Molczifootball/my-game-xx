@@ -30,7 +30,13 @@ export default function TroopArrows({ state, minX, minY, tileSize, viewportW, vi
           <feComposite in="SourceGraphic" in2="glow" operator="over" />
         </filter>
       </defs>
-      {state.activeCommands.map((cmd: ActiveCommand) => {
+      {state.activeCommands.filter((cmd: ActiveCommand) => {
+        // Hide enemy returning commands — only show: player commands + incoming attacks toward player
+        const playerVillages = state.worldMap.filter((t: any) => t.owner === state.playerName);
+        const isPlayerOrigin = playerVillages.some((t: any) => t.x === cmd.originX && t.y === cmd.originY);
+        const isIncomingToPlayer = cmd.status === 'marching' && playerVillages.some((t: any) => t.x === cmd.targetX && t.y === cmd.targetY);
+        return isPlayerOrigin || isIncomingToPlayer;
+      }).map((cmd: ActiveCommand) => {
         const now = Date.now();
         const duration = cmd.travelDurationMs;
         const elapsed = cmd.status === 'marching'

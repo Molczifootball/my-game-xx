@@ -40,13 +40,13 @@ export default function Header() {
   ];
 
   return (
-    <header className="w-full z-50 sticky top-0">
+    <header className="w-full">
       <div className="bg-surface-low/95 backdrop-blur-xl px-4 lg:px-6 py-0 flex items-center justify-between border-b border-outline-variant shadow-[0_4px_20px_rgba(0,0,0,0.4)]">
 
         {/* Left: Logo + Nav */}
         <div className="flex items-center gap-1 lg:gap-2">
           {/* Logo */}
-          <Link href="/" className="text-primary font-bold medieval-font text-xl lg:text-2xl tracking-widest shrink-0 mr-2 lg:mr-4 hover:brightness-110 transition-all py-3">
+          <Link href="/" className="text-primary font-bold medieval-font text-base tracking-widest shrink-0 mr-2 lg:mr-3 hover:brightness-110 transition-all py-1.5">
             TW
           </Link>
 
@@ -58,10 +58,10 @@ export default function Header() {
                 <Link
                   key={href}
                   href={href}
-                  className={`relative flex items-center gap-1.5 px-3 lg:px-4 py-3.5 text-[10px] lg:text-[11px] font-bold uppercase tracking-widest transition-all border-b-2
+                  className={`relative flex items-center gap-1.5 px-2.5 lg:px-3 py-2 text-[9px] lg:text-[10px] font-bold uppercase tracking-widest transition-all border-b-2
                     ${isActive
                       ? 'text-primary border-primary bg-primary/5'
-                      : 'text-gray-500 border-transparent hover:text-gray-300 hover:border-gray-600 hover:bg-white/[0.02]'
+                      : 'text-gray-400 border-transparent hover:text-gray-200 hover:border-gray-600 hover:bg-white/[0.02]'
                     }`}
                 >
                   <span className="text-sm hidden lg:inline">{icon}</span>
@@ -87,7 +87,7 @@ export default function Header() {
                 className={`px-2.5 py-1 rounded text-[9px] font-bold transition-all whitespace-nowrap
                   ${state.activeVillageId === v.id
                     ? 'bg-primary/15 text-primary ring-1 ring-primary/30'
-                    : 'text-gray-600 hover:text-gray-400 hover:bg-white/5'}`}
+                    : 'text-gray-400 hover:text-gray-400 hover:bg-white/5'}`}
               >
                 {v.name} <span className="opacity-40">{v.x}|{v.y}</span>
               </button>
@@ -102,7 +102,7 @@ export default function Header() {
             className={`text-[9px] px-2 py-1 rounded font-bold uppercase tracking-wider transition-all
               ${pathname === '/dev'
                 ? 'text-purple-400 bg-purple-500/10'
-                : 'text-gray-600 hover:text-purple-400'
+                : 'text-gray-400 hover:text-purple-400'
               }`}
           >
             DEV
@@ -110,7 +110,7 @@ export default function Header() {
 
           <div className="w-px h-4 bg-outline-variant" />
 
-          <span className="text-[10px] text-gray-600 font-mono tabular-nums">
+          <span className="text-[10px] text-gray-400 font-mono tabular-nums">
             {serverTime.toLocaleTimeString()}
           </span>
 
@@ -135,7 +135,7 @@ export default function Header() {
               className={`px-2 py-0.5 rounded text-[9px] font-bold whitespace-nowrap transition-all
                 ${state.activeVillageId === v.id
                   ? 'bg-primary/15 text-primary'
-                  : 'text-gray-600 hover:text-gray-400'}`}
+                  : 'text-gray-400 hover:text-gray-400'}`}
             >
               {v.name}
             </button>
