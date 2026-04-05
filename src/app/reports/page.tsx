@@ -69,19 +69,10 @@ export default function ReportsPage() {
 
       {/* ── 1. STATS DASHBOARD ── */}
       <div className="shrink-0 px-6 py-4 border-b border-outline-variant bg-surface-low">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between">
           <h1 className="text-lg text-white font-bold medieval-font tracking-widest uppercase">Military Archives</h1>
           <span className="text-[9px] text-gray-500 font-mono">{stats.total} operations</span>
         </div>
-        {stats.total > 0 && (
-          <div className="grid grid-cols-5 gap-2">
-            <StatCard label="Attacks" value={stats.attacks} sub={`${stats.victoryRate}% win`} color="text-red-400" />
-            <StatCard label="Scouts" value={stats.scouts} color="text-blue-400" />
-            <StatCard label="Losses" value={stats.totalLosses} color="text-gray-400" />
-            <StatCard label="Loot" value={`${((stats.lootW + stats.lootC + stats.lootI) / 1000).toFixed(1)}k`} color="text-amber-400" />
-            <StatCard label="Unread" value={state.reports.filter(r => !r.isRead).length} color="text-primary" />
-          </div>
-        )}
       </div>
 
       {/* ── 2. FILTER BAR ── */}
@@ -165,7 +156,7 @@ export default function ReportsPage() {
         {/* Report Detail */}
         <div className={`${selectedReport && mobileDetail ? 'flex' : 'hidden md:flex'} flex-col flex-1 overflow-y-auto custom-scrollbar`}>
           {selectedReport ? (
-            <div className="p-6">
+            <div className="p-4">
               {/* Mobile back button */}
               <button onClick={() => setMobileDetail(false)} className="md:hidden text-[10px] text-primary font-bold uppercase tracking-widest mb-4">← Back to list</button>
               <ReportDetail report={selectedReport} />
@@ -215,51 +206,49 @@ function EmptyState({ hasReports }: { hasReports: boolean }) {
 /* ── REPORT DETAIL ── */
 function ReportDetail({ report }: { report: BattleReport }) {
   return (
-    <div className="flex flex-col gap-5 animate-in fade-in duration-300">
+    <div className="flex flex-col gap-3 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex items-center gap-4 pb-4 border-b border-outline-variant">
-        <span className="text-4xl">{report.direction === 'incoming' ? '🛡️' : report.type === 'attack' ? '⚔️' : '🕵️'}</span>
+      <div className="flex items-center gap-3 pb-2 border-b border-outline-variant">
+        <span className="text-2xl">{report.direction === 'incoming' ? '🛡️' : report.type === 'attack' ? '⚔️' : '🕵️'}</span>
         <div>
-          <h2 className="text-xl text-white font-bold medieval-font tracking-widest uppercase">
+          <h2 className="text-sm text-white font-bold medieval-font tracking-widest uppercase">
             {report.direction === 'incoming'
               ? (report.result === 'victory' ? 'Village Defended' : 'Village Raided')
               : (report.type === 'attack' ? 'Assault Report' : 'Intelligence Summary')
             }
           </h2>
-          <div className="flex items-center gap-3 mt-1">
+          <div className="flex items-center gap-2 mt-0.5">
             {report.direction === 'incoming' && (
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-orange-500/15 text-orange-400">
-                Incoming
-              </span>
+              <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-400">Incoming</span>
             )}
-            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${report.result === 'victory' ? 'bg-emerald-500/15 text-emerald-400' : report.result === 'defeat' ? 'bg-red-500/15 text-red-400' : 'bg-blue-500/15 text-blue-400'}`}>
+            <span className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${report.result === 'victory' ? 'bg-emerald-500/15 text-emerald-400' : report.result === 'defeat' ? 'bg-red-500/15 text-red-400' : 'bg-blue-500/15 text-blue-400'}`}>
               {report.direction === 'incoming' ? (report.result === 'victory' ? 'Defended' : 'Pillaged') : report.result}
             </span>
-            <span className="text-[10px] text-gray-500 font-mono">{new Date(report.timestamp).toLocaleString()}</span>
+            <span className="text-[8px] text-gray-500 font-mono">{new Date(report.timestamp).toLocaleString()}</span>
           </div>
         </div>
       </div>
 
       {/* Origin + Target info */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-black/30 border border-outline-variant px-4 py-3 rounded">
-          <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold block">
+      <div className="grid grid-cols-3 gap-2">
+        <div className="bg-black/30 border border-outline-variant px-2 py-1.5 rounded">
+          <span className="text-[8px] text-gray-500 uppercase tracking-widest font-bold block">
             {report.direction === 'incoming' ? 'Attacker' : 'From'}
           </span>
-          <span className={`text-sm font-bold ${report.direction === 'incoming' ? 'text-red-400' : 'text-blue-400'}`}>
+          <span className={`text-[10px] font-bold ${report.direction === 'incoming' ? 'text-red-400' : 'text-blue-400'}`}>
             {report.direction === 'incoming' ? (report.attackerName || 'Barbarian') : (report.originName || '—')}
           </span>
-          {report.originX && <span className="text-[9px] text-gray-600 font-mono block">{report.originX}|{report.originY}</span>}
+          {report.originX && <span className="text-[8px] text-gray-500 font-mono block">{report.originX}|{report.originY}</span>}
         </div>
-        <div className="bg-black/30 border border-outline-variant px-4 py-3 rounded">
-          <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold block">
+        <div className="bg-black/30 border border-outline-variant px-2 py-1.5 rounded">
+          <span className="text-[8px] text-gray-500 uppercase tracking-widest font-bold block">
             {report.direction === 'incoming' ? 'Your Village' : 'Target'}
           </span>
-          <span className={`text-sm font-bold ${report.direction === 'incoming' ? 'text-blue-400' : 'text-red-400'}`}>{report.targetName}</span>
+          <span className={`text-[10px] font-bold ${report.direction === 'incoming' ? 'text-blue-400' : 'text-red-400'}`}>{report.targetName}</span>
         </div>
-        <div className="bg-black/30 border border-outline-variant px-4 py-3 rounded">
-          <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold block">Coordinates</span>
-          <span className="text-sm text-primary font-mono font-bold">{report.targetX}|{report.targetY}</span>
+        <div className="bg-black/30 border border-outline-variant px-2 py-1.5 rounded">
+          <span className="text-[8px] text-gray-500 uppercase tracking-widest font-bold block">Coordinates</span>
+          <span className="text-[10px] text-primary font-mono font-bold">{report.targetX}|{report.targetY}</span>
         </div>
       </div>
 
@@ -267,9 +256,9 @@ function ReportDetail({ report }: { report: BattleReport }) {
       {report.type === 'scout' && report.targetResources && (
         <>
           {/* Resources with bars */}
-          <div className="bg-black/20 border border-outline-variant rounded p-4">
-            <h3 className="text-[9px] text-primary/70 font-bold uppercase tracking-[0.2em] mb-3">Resources</h3>
-            <div className="flex flex-col gap-2.5">
+          <div className="bg-black/20 border border-outline-variant rounded p-2.5">
+            <h3 className="text-[9px] text-primary/70 font-bold uppercase tracking-[0.2em] mb-1.5">Resources</h3>
+            <div className="flex flex-col gap-1.5">
               {[
                 { label: '🪵 Wood', value: Math.floor(report.targetResources.wood), color: 'bg-wood', textColor: 'text-wood' },
                 { label: '🧱 Clay', value: Math.floor(report.targetResources.clay), color: 'bg-clay', textColor: 'text-clay' },
@@ -287,8 +276,8 @@ function ReportDetail({ report }: { report: BattleReport }) {
           </div>
 
           {/* Garrison */}
-          <div className="bg-black/20 border border-outline-variant rounded p-4">
-            <h3 className="text-[9px] text-primary/70 font-bold uppercase tracking-[0.2em] mb-3">Garrison</h3>
+          <div className="bg-black/20 border border-outline-variant rounded p-2.5">
+            <h3 className="text-[9px] text-primary/70 font-bold uppercase tracking-[0.2em] mb-1.5">Garrison</h3>
             {report.targetUnits && Object.entries(report.targetUnits).some(([, v]) => (v as number) > 0) ? (
               <div className="grid grid-cols-2 gap-1.5">
                 {Object.entries(report.targetUnits).filter(([, v]) => (v as number) > 0).map(([u, v]) => (
@@ -306,8 +295,8 @@ function ReportDetail({ report }: { report: BattleReport }) {
 
           {/* Buildings */}
           {report.targetBuildings && (
-            <div className="bg-black/20 border border-outline-variant rounded p-4">
-              <h3 className="text-[9px] text-primary/70 font-bold uppercase tracking-[0.2em] mb-3">Buildings</h3>
+            <div className="bg-black/20 border border-outline-variant rounded p-2.5">
+              <h3 className="text-[9px] text-primary/70 font-bold uppercase tracking-[0.2em] mb-1.5">Buildings</h3>
               <div className="grid grid-cols-2 gap-1.5">
                 {Object.entries(report.targetBuildings).map(([b, l]) => (
                   <div key={b} className="flex items-center justify-between bg-black/30 px-2.5 py-1.5 rounded border border-outline-variant">
@@ -327,8 +316,8 @@ function ReportDetail({ report }: { report: BattleReport }) {
           {/* Forces comparison */}
           <div className="grid grid-cols-2 gap-3">
             {/* Attacker */}
-            <div className="bg-black/20 border border-outline-variant rounded p-4">
-              <h3 className="text-[9px] text-blue-400/70 font-bold uppercase tracking-[0.2em] mb-3">
+            <div className="bg-black/20 border border-outline-variant rounded p-2.5">
+              <h3 className="text-[9px] text-blue-400/70 font-bold uppercase tracking-[0.2em] mb-1.5">
                 {report.direction === 'incoming' ? `⚔️ ${report.attackerName || 'Barbarian'} Forces` : '🛡️ Your Forces'}
               </h3>
               <div className="flex flex-col gap-1">
@@ -349,8 +338,8 @@ function ReportDetail({ report }: { report: BattleReport }) {
             </div>
 
             {/* Defender */}
-            <div className="bg-black/20 border border-outline-variant rounded p-4">
-              <h3 className="text-[9px] text-red-400/70 font-bold uppercase tracking-[0.2em] mb-3">
+            <div className="bg-black/20 border border-outline-variant rounded p-2.5">
+              <h3 className="text-[9px] text-red-400/70 font-bold uppercase tracking-[0.2em] mb-1.5">
                 {report.direction === 'incoming' ? '🛡️ Your Defense' : '🏯 Defender'}
               </h3>
               {report.defenderUnits && Object.entries(report.defenderUnits).some(([, v]) => (v as number) > 0) ? (
@@ -377,33 +366,21 @@ function ReportDetail({ report }: { report: BattleReport }) {
 
           {/* Loot */}
           {(report.loot.wood + report.loot.clay + report.loot.iron) > 0 && (
-            <div className="bg-amber-900/10 border border-amber-900/30 rounded p-4">
-              <h3 className="text-[9px] text-amber-400/70 font-bold uppercase tracking-[0.2em] mb-3">Loot Secured</h3>
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <div className="bg-black/30 rounded py-2 border border-outline-variant">
-                  <span className="text-base block">🪵</span>
-                  <span className="text-sm text-wood font-mono font-bold">{report.loot.wood.toLocaleString()}</span>
-                </div>
-                <div className="bg-black/30 rounded py-2 border border-outline-variant">
-                  <span className="text-base block">🧱</span>
-                  <span className="text-sm text-clay font-mono font-bold">{report.loot.clay.toLocaleString()}</span>
-                </div>
-                <div className="bg-black/30 rounded py-2 border border-outline-variant">
-                  <span className="text-base block">⛏️</span>
-                  <span className="text-sm text-iron font-mono font-bold">{report.loot.iron.toLocaleString()}</span>
-                </div>
+            <div className="bg-amber-900/10 border border-amber-900/30 rounded px-2.5 py-1.5">
+              <h3 className="text-[8px] text-amber-400/70 font-bold uppercase tracking-widest mb-1">Loot</h3>
+              <div className="flex gap-3 text-[10px] font-mono font-bold justify-center">
+                <span className="text-wood">🪵 {report.loot.wood.toLocaleString()}</span>
+                <span className="text-clay">🧱 {report.loot.clay.toLocaleString()}</span>
+                <span className="text-iron">⛏️ {report.loot.iron.toLocaleString()}</span>
               </div>
             </div>
           )}
 
           {/* Endorsement drop */}
           {report.endorsementDrop && report.endorsementDrop > 0 && (
-            <div className="bg-purple-900/10 border border-purple-500/30 rounded p-4 flex items-center justify-between">
-              <div>
-                <h3 className="text-[9px] text-purple-400/70 font-bold uppercase tracking-[0.2em]">Loyalty Shift</h3>
-                <span className="text-[10px] text-gray-500">Endorsement reduced by nobleman conquest</span>
-              </div>
-              <span className="text-2xl text-purple-400 font-mono font-bold">-{report.endorsementDrop}</span>
+            <div className="bg-purple-900/10 border border-purple-500/30 rounded px-2.5 py-1.5 flex items-center justify-between">
+              <span className="text-[9px] text-purple-400/70 font-bold uppercase">👑 Endorsement</span>
+              <span className="text-sm text-purple-400 font-mono font-bold">-{report.endorsementDrop}</span>
             </div>
           )}
         </>

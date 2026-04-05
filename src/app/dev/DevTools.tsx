@@ -103,9 +103,12 @@ export default function DevTools() {
             <button onClick={() => { spawnPlayerVillage(26, 24, 'Player Fortress East'); spawnPlayerVillage(24, 23, 'Player Citadel North'); }} className="w-full py-3 bg-blue-900/20 hover:bg-blue-900/40 border border-blue-500/30 text-blue-400 text-[10px] font-bold uppercase tracking-widest rounded transition-all active:scale-95 mb-4">
               Spawn Villages at 26|24 & 24|23
             </button>
-            <button onClick={() => { if (confirm('Regenerate entire world map?')) regenerateMap(); }} className="w-full py-3 bg-surface-highest hover:bg-red-900/20 border border-outline-variant text-on-surface-variant text-[10px] font-bold uppercase tracking-widest rounded transition-all active:scale-95">
+            <button onClick={() => { if (confirm('Regenerate entire world map?')) regenerateMap(); }} className="w-full py-3 bg-surface-highest hover:bg-red-900/20 border border-outline-variant text-on-surface-variant text-[10px] font-bold uppercase tracking-widest rounded transition-all active:scale-95 mb-4">
               🔄 Rewrite World Fabric
             </button>
+            <Link href="/dev/placement" className="block w-full py-3 bg-green-900/20 hover:bg-green-900/40 border border-green-500/30 text-green-400 text-[10px] font-bold uppercase tracking-widest rounded transition-all active:scale-95 text-center">
+              🎯 Building Placement Tool
+            </Link>
           </div>
           <div className="bg-surface-dim rounded p-6 border border-outline-variant shadow-inner">
             <h4 className="text-[10px] text-on-surface-variant font-bold uppercase mb-4 tracking-[0.2em] opacity-40">Tactical Intelligence</h4>

@@ -75,25 +75,25 @@ export default function Home() {
         <div className="sovereign-panel border-outline-variant shadow-2xl max-w-lg w-full flex flex-col overflow-hidden relative max-h-[90vh]">
           <button onClick={() => setSelectedBuilding(null)} className="absolute top-4 right-4 w-8 h-8 bg-black/50 rounded-full text-gray-300 hover:text-white hover:bg-red-500/80 transition-colors z-20">✕</button>
           
-          <div className="h-48 w-full bg-[#111] relative border-b border-[#333] shrink-0">
+          <div className="h-32 w-full bg-[#111] relative border-b border-[#333] shrink-0">
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-black"></div>
             <Image src={meta.image} alt={meta.name} fill sizes="600px" quality={100} className="object-cover opacity-90 mix-blend-screen" priority />
-            <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#1a1a1b] to-transparent h-24"></div>
-            <h2 className="absolute bottom-4 left-6 text-3xl font-bold text-white medieval-font drop-shadow-md">{meta.name}</h2>
+            <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#1a1a1b] to-transparent h-16"></div>
+            <h2 className="absolute bottom-3 left-5 text-xl font-bold text-white medieval-font drop-shadow-md">{meta.name}</h2>
           </div>
 
-          <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-            <p className="text-gray-400 text-sm mb-6 leading-relaxed bg-[#111] p-3 rounded">{meta.desc}</p>
-            
-            <div className="flex justify-between items-center mb-6">
-              <div className="text-xl">
-                <span className="text-on-surface-variant font-bold medieval-font tracking-widest text-[#ffc63e]">Level {level}</span>
-                {queuedForBuilding > 0 && <span className="text-emerald-500 ml-2 animate-pulse text-xs font-bold uppercase tracking-widest">+{queuedForBuilding} in construction</span>}
+          <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
+            <p className="text-gray-400 text-xs mb-3 leading-relaxed bg-[#111] p-2 rounded">{meta.desc}</p>
+
+            <div className="flex justify-between items-center mb-3">
+              <div>
+                <span className="text-on-surface-variant font-bold medieval-font tracking-widest text-[#ffc63e] text-sm">Level {level}</span>
+                {queuedForBuilding > 0 && <span className="text-emerald-500 ml-2 animate-pulse text-[9px] font-bold uppercase tracking-widest">+{queuedForBuilding}</span>}
               </div>
-              <div className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-[0.2em]">Max Mastery {maxLevel}</div>
+              <div className="text-[9px] font-bold text-on-surface-variant/40 uppercase tracking-wider">Max {maxLevel}</div>
             </div>
 
-            <div className="bg-[#242426] p-4 rounded-lg border border-[#333]">
+            <div className="bg-[#242426] p-3 rounded-lg border border-[#333]">
               {/* Building requirements */}
               {reqs.length > 0 && (
                 <div className="mb-4">
@@ -153,7 +153,7 @@ export default function Home() {
                       )}
                     </div>
                   </div>
-                  <div className="flex justify-center gap-6 mb-6 font-mono text-xs font-bold border-y border-outline-variant py-4 bg-surface-dim">
+                  <div className="flex justify-center gap-4 mb-3 font-mono text-xs font-bold border-y border-outline-variant py-2 bg-surface-dim">
                     <span className={currentWood >= costWood ? 'text-wood' : 'text-red-500'}>🪵 {costWood}</span>
                     <span className={currentClay >= costClay ? 'text-clay' : 'text-red-500'}>🧱 {costClay}</span>
                     <span className={currentIron >= costIron ? 'text-iron' : 'text-red-500'}>⛏️ {costIron}</span>
@@ -161,7 +161,7 @@ export default function Home() {
                   <button
                     disabled={queueFull || !canAfford}
                     onClick={() => { upgradeBuilding(selectedBuilding); setSelectedBuilding(null); }}
-                    className={`w-full py-4 gold-button rounded transition-all active:scale-95
+                    className={`w-full py-2.5 gold-button rounded transition-all active:scale-95 text-sm
                       ${(queueFull || !canAfford) ? 'opacity-30 grayscale cursor-not-allowed' : ''}`}
                   >
                     {queueFull ? "Queue At Capacity" : !canAfford ? "Insufficient Tributes" : "Expand Infrastructure"}
@@ -241,21 +241,21 @@ export default function Home() {
   const isBuildingLocked = (id: keyof Buildings) => BUILDING_REQUIREMENTS[id].some(r => (vBuildings[r.requires] || 0) < r.level);
 
   const BUILDING_POSITIONS: Record<keyof Buildings, { x: string; y: string }> = {
-    headquarters: { x: '49.9%', y: '44.2%' },
-    barracks:     { x: '42.1%', y: '59.2%' },
-    stable:       { x: '58.6%', y: '59.2%' },
-    castle:       { x: '59.5%', y: '43.6%' },
-    palace:       { x: '57.2%', y: '29.1%' },
-    cityWall:     { x: '50.1%', y: '74.0%' },
-    timberCamp:   { x: '32.4%', y: '18.6%' },
-    ironMine:     { x: '72.4%', y: '19.4%' },
-    clayPit:      { x: '29.2%', y: '82.0%' },
-    warehouse:    { x: '49.8%', y: '87.2%' },
-    farm:         { x: '38.0%', y: '75.0%' },
-    granary:      { x: '55.0%', y: '85.0%' },
-    huntersLodge: { x: '22.0%', y: '30.0%' },
-    fishery:      { x: '78.0%', y: '80.0%' },
-    residence:    { x: '42.0%', y: '38.0%' },
+    headquarters: { x: '49.5%', y: '41.7%' },
+    barracks:     { x: '43.6%', y: '61.4%' },
+    stable:       { x: '57.4%', y: '62.7%' },
+    castle:       { x: '58.0%', y: '40.2%' },
+    palace:       { x: '55.9%', y: '18.2%' },
+    cityWall:     { x: '49.7%', y: '87.4%' },
+    timberCamp:   { x: '34.2%', y: '4.7%' },
+    ironMine:     { x: '67.0%', y: '12.1%' },
+    clayPit:      { x: '32.6%', y: '96.3%' },
+    warehouse:    { x: '49.1%', y: '98.4%' },
+    farm:         { x: '14.8%', y: '79.5%' },
+    granary:      { x: '42.1%', y: '41.5%' },
+    huntersLodge: { x: '12.9%', y: '5.7%' },
+    fishery:      { x: '65.8%', y: '88.7%' },
+    residence:    { x: '46.1%', y: '25.6%' },
   };
 
   return (
