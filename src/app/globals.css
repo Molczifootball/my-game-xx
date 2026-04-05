@@ -1,0 +1,176 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Sovereign Codex Primaries */
+  --color-primary: #ffc63e;
+  --color-primary-container: #e3aa00;
+  --color-on-primary: #402d00;
+  
+  /* Resources */
+  --color-wood: #a1662f;
+  --color-clay: #c55331;
+  --color-iron: #9ca3af;
+  --color-amber: #ffb700;
+  
+  /* Surface Hierarchy (The Illuminated Archive) */
+  --color-bg-base: #111316;
+  --color-surface-dim: #111316;
+  --color-surface-low: #1a1c1f;
+  --color-surface-base: #1e2023;
+  --color-surface-high: #282a2d;
+  --color-surface-highest: #333538;
+  
+  /* Accents */
+  --color-outline-variant: rgba(77, 70, 53, 0.15);
+  --color-tertiary: #ffc19b;
+}
+
+
+:root {
+  --background: var(--color-bg-base);
+  --foreground: #e2e2e6;
+  --on-surface-variant: #d0c5af;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  background-image: 
+    radial-gradient(circle at top left, rgba(255, 198, 62, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at center, #111316 0%, #0c0e11 100%);
+  min-height: 100vh;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  letter-spacing: -0.011em;
+  margin: 0;
+  scrollbar-gutter: stable;
+}
+
+h1, h2, h3, h4, .medieval-font {
+  font-family: var(--font-noto), serif;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+/* Sovereign Components */
+
+.sovereign-panel {
+  background: var(--color-surface-low);
+  border: 1px solid var(--color-outline-variant);
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.4);
+}
+
+.sovereign-card {
+  background: var(--color-surface-high);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sovereign-card:hover {
+  background: var(--color-surface-highest);
+  box-shadow: 0 0 20px rgba(255, 183, 0, 0.05);
+}
+
+.glass-panel {
+  background: rgba(51, 53, 56, 0.4);
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 198, 62, 0.05);
+}
+
+.gold-button {
+  background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-primary-container) 100%);
+  color: var(--color-on-primary);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.gold-button:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.gold-button:active {
+  transform: translateY(0);
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-surface-highest) var(--color-bg-base);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-surface-highest);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-container);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---- Map Terrain Animations ---- */
+
+.water-shimmer {
+  animation: waterShimmer 4s ease-in-out infinite;
+}
+
+@keyframes waterShimmer {
+  0%, 100% { filter: brightness(1) hue-rotate(0deg); }
+  50% { filter: brightness(1.1) hue-rotate(8deg); }
+}
+
+.forest-tile:hover {
+  animation: forestSway 3s ease-in-out infinite;
+}
+
+@keyframes forestSway {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(0.5px); }
+}
+
+.village-pulse {
+  animation: villagePulse 2.5s ease-in-out infinite;
+}
+
+@keyframes villagePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+  50% { box-shadow: 0 0 12px 2px rgba(59, 130, 246, 0.2); }
+}
+
+.fog-drift {
+  animation: fogDrift 8s linear infinite;
+}
+
+@keyframes fogDrift {
+  0% { opacity: 0.85; }
+  50% { opacity: 0.75; }
+  100% { opacity: 0.85; }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .water-shimmer,
+  .forest-tile:hover,
+  .village-pulse,
+  .fog-drift {
+    animation: none;
+  }
+}
+
