@@ -246,7 +246,7 @@ export default function SidebarRight() {
                 <div className="text-gray-600 text-[10px] text-center py-8">Inbox is empty.</div>
              ) : (
                 <div className="flex flex-col gap-2">
-                   {state.reports.slice(0, 10).map((rep) => (
+                   {state.reports.slice(0, 3).map((rep) => (
                     <div 
                       key={rep.id} 
                       onClick={() => {
@@ -259,7 +259,7 @@ export default function SidebarRight() {
                          <div className="absolute top-0 left-0 w-1 h-full bg-amber-600 z-10" />
                        )}
                        <div className="flex items-center gap-2">
-                         <span className="text-lg">{rep.type === 'attack' ? '⚔️' : '🕵️'}</span>
+                         <span className="text-lg">{rep.direction === 'incoming' ? '🛡️' : rep.type === 'attack' ? '⚔️' : '🕵️'}</span>
                          <div>
                             <span className={`block font-bold capitalize tracking-wide ${rep.result === 'victory' ? 'text-green-500' : rep.result === 'defeat' ? 'text-red-500' : 'text-blue-500'}`}>
                               {rep.result}

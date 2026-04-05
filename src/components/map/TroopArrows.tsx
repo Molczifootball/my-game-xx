@@ -78,16 +78,14 @@ export default function TroopArrows({ state, minX, minY, tileSize, viewportW, vi
 
         return (
           <g key={cmd.id} filter={hasLoot ? 'url(#loot-glow)' : 'url(#arrow-glow)'}>
-            {/* Path line - bezier curve */}
-            <path
-              d={`M ${startPX} ${startPY} Q ${cpX} ${cpY} ${endPX} ${endPY}`}
-              fill="none"
+            {/* Path line - straight */}
+            <line
+              x1={startPX} y1={startPY} x2={endPX} y2={endPY}
               stroke={strokeColor}
               strokeWidth={strokeWidth}
               strokeDasharray={isReturning ? '3 8' : '8 4'}
               opacity={isReturning ? 0.35 : 0.65}
-              strokeLinecap="round"
-            />
+              strokeLinecap="round" />
 
             {/* Moving unit icon */}
             <g transform={`translate(${pxX}, ${pxY})`}>

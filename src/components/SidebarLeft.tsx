@@ -1,12 +1,12 @@
 "use client";
 
-import { useGame, getProductionRate } from '@/context/GameContext';
+import { useGame, getProductionRate, getFoodProduction, getFoodUpkeep } from '@/context/GameContext';
 import { formatTime, BUILDING_META, calculatePoints } from '@/utils/shared';
 import { useEffect, useState } from 'react';
 
 export default function SidebarLeft() {
-  const { state, activeVillage, addResources, maxAllBuildings, resetVillage, getTimeRemaining, renameVillage, addArmy, updateWorldTile, MAX_LEVELS } = useGame();
-  
+  const { state, activeVillage, getTimeRemaining, renameVillage } = useGame();
+
   const [, setForceRender] = useState(0);
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -32,10 +32,17 @@ export default function SidebarLeft() {
   const currentClay = Math.min(capacity, activeVillage.resources!.clay + (rateClay / 3600) * deltaSecs);
   const currentIron = Math.min(capacity, activeVillage.resources!.iron + (rateIron / 3600) * deltaSecs);
 
+  const foodProd = getFoodProduction(activeVillage.buildings!.farm || 0);
+  const foodUpkeep = getFoodUpkeep(activeVillage.units || {});
+  const netFood = foodProd - foodUpkeep;
+  const currentFood = Math.min(capacity, Math.max(0, (activeVillage.resources!.food || 0) + (netFood / 3600) * deltaSecs));
+  const isStarving = currentFood <= 0 && foodUpkeep > foodProd;
+
   return (
-    <aside className="w-full md:w-64 sovereign-panel border-r border-[#3e2c1e] flex flex-col overflow-y-auto custom-scrollbar z-20 shadow-xl shrink-0">
-      {/* Village Context & Resources */}
-      <div className="p-5 border-b border-[#2e1f13]">
+    <aside className="w-full md:w-60 bg-surface-low flex flex-col overflow-y-auto custom-scrollbar z-20 shrink-0 border-r border-outline-variant">
+
+      {/* Village Info */}
+      <div className="px-4 pt-4 pb-3">
         {isEditingName ? (
           <input
             autoFocus
@@ -47,93 +54,99 @@ export default function SidebarLeft() {
               if (e.key === 'Enter') { renameVillage(nameInput); setIsEditingName(false); }
               if (e.key === 'Escape') setIsEditingName(false);
             }}
-            className="w-full text-xl text-[#ffb700] medieval-font bg-black/60 border border-amber-600/60 rounded px-2 py-1 mb-2 outline-none focus:border-amber-400 shadow-inner"
+            className="w-full text-sm text-primary medieval-font bg-black/40 border border-primary/40 rounded px-2 py-1 outline-none focus:border-primary"
           />
         ) : (
           <div
-            className="flex items-center gap-2 group cursor-pointer mb-2"
+            className="flex items-center gap-1.5 group cursor-pointer"
             onClick={() => { setNameInput(activeVillage.name || ''); setIsEditingName(true); }}
-            title="Click to rename village"
+            title="Click to rename"
           >
-            <h2 className="text-2xl text-[#ffb700] medieval-font truncate drop-shadow">{activeVillage.name}</h2>
-            <span className="text-[#8c6239] opacity-0 group-hover:opacity-100 transition-opacity text-sm">✏️</span>
+            <h2 className="text-sm text-primary medieval-font truncate tracking-wider">{activeVillage.name}</h2>
+            <span className="text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity text-[10px]">✏️</span>
           </div>
         )}
-        <div className="grid grid-cols-2 gap-2 text-sm text-[#a68c74] font-mono mb-4 bg-black/40 p-2 rounded border border-[#3e2c1e] shadow-inner">
-          <div>Coords:</div><div className="text-amber-100 text-right">{activeVillage.x}|{activeVillage.y}</div>
-          <div>Points:</div><div className="text-[#ffb700] text-right font-bold drop-shadow">{totalPoints.toLocaleString()}</div>
-        </div>
-        
-        <h3 className="text-[#8c6239] uppercase tracking-widest text-[10px] font-bold mb-3 border-b border-[#3e2c1e] pb-1">Stockpiles</h3>
-        <div className="flex flex-col gap-2">
-          <ResourceBar icon="🪵" label="Wood" value={currentWood} rate={rateWood} capacity={capacity} fillColor="#a1662f" trackColor="#3b1f0a" />
-          <ResourceBar icon="🧱" label="Clay" value={currentClay} rate={rateClay} capacity={capacity} fillColor="#c55331" trackColor="#3b1510" />
-          <ResourceBar icon="⛏️" label="Iron" value={currentIron} rate={rateIron} capacity={capacity} fillColor="#7a8fa8" trackColor="#151c24" />
-          <div className="flex justify-between items-center text-[#8c6239] bg-[#1c140d]/50 px-3 py-1.5 rounded border border-[#3e2c1e] shadow-md mt-0.5">
-            <div className="flex gap-2 items-center"><span>📦</span><span className="font-bold uppercase tracking-wider text-[10px]">Capacity</span></div>
-            <span className="text-amber-100/80 font-mono text-xs">{capacity.toLocaleString()}</span>
-          </div>
+        <div className="flex items-center gap-3 mt-1 text-[10px] text-gray-500 font-mono">
+          <span>{activeVillage.x}|{activeVillage.y}</span>
+          <span className="text-primary font-bold">{totalPoints.toLocaleString()} pts</span>
         </div>
       </div>
 
-      {/* Active Upgrades Queue */}
-      <div className="p-5 flex-1 bg-black/20">
-        <h3 className="text-[#8c6239] uppercase tracking-widest text-[10px] font-bold mb-4 flex justify-between items-center">
-          <span>Construction Queue</span>
-          <span className={`${queuedCount >= 3 ? 'text-red-500' : 'text-[#8c6239]'}`}>{queuedCount} / 3</span>
-        </h3>
-        
+      {/* Resources */}
+      <div className="px-4 pb-4 border-b border-outline-variant">
+        <div className="flex flex-col gap-3">
+          <ResourceBar label="Wood" value={currentWood} rate={rateWood} capacity={capacity} color="#a1662f" />
+          <ResourceBar label="Clay" value={currentClay} rate={rateClay} capacity={capacity} color="#c55331" />
+          <ResourceBar label="Iron" value={currentIron} rate={rateIron} capacity={capacity} color="#7a8fa8" />
+          <ResourceBar label="Food" value={currentFood} rate={netFood} capacity={capacity} color="#4ade80" isStarving={isStarving} />
+        </div>
+        <div className="flex justify-between items-center mt-2 text-[9px] text-gray-600 font-mono">
+          <span>Warehouse</span>
+          <span>{capacity.toLocaleString()} max</span>
+        </div>
+      </div>
+
+      {/* Construction Queue */}
+      <div className="px-4 py-4 flex-1">
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Build Queue</span>
+          <span className={`text-[9px] font-mono font-bold ${queuedCount >= 3 ? 'text-red-400' : 'text-gray-600'}`}>{queuedCount}/3</span>
+        </div>
+
         {vUpgrades.length === 0 ? (
-          <p className="text-[#5e4126] text-xs text-center border border-dashed border-[#5e4126] py-6 rounded uppercase tracking-widest font-bold">Queue Empty</p>
+          <div className="text-gray-700 text-[10px] text-center py-6 border border-dashed border-outline-variant rounded uppercase tracking-widest font-bold">
+            Empty
+          </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             {vUpgrades.map((u, idx) => {
               const remaining = getTimeRemaining(u.completesAt);
+              const isFirst = idx === 0;
               return (
-                <div key={u.id} className="bg-[#1e1e1e] border border-[#444] border-l-2 border-l-amber-600 p-3 text-xs rounded relative">
-                  <div className="flex justify-between items-center text-gray-200 mb-1">
-                    <span className="font-bold truncate">{BUILDING_META[u.building].name}</span>
-                    <span className="text-amber-500 font-bold">Lv.{u.targetLevel}</span>
+                <div key={u.id} className={`bg-black/20 border border-outline-variant rounded p-2.5 border-l-2 ${isFirst ? 'border-l-green-500' : 'border-l-gray-600'}`}>
+                  <div className="flex justify-between items-center text-[10px] mb-1">
+                    <span className="text-gray-300 font-bold truncate">{BUILDING_META[u.building].name}</span>
+                    <span className="text-primary font-mono font-bold">Lv.{u.targetLevel}</span>
                   </div>
-                  <div className="flex justify-between font-mono text-gray-500">
-                    <span className={idx === 0 ? "text-emerald-500/80" : ""}>{idx === 0 ? "Upgrading..." : "Queued"}</span>
-                    <span className="text-white">{formatTime(remaining)}</span>
+                  <div className="flex justify-between items-center text-[9px]">
+                    <span className={isFirst ? 'text-green-400' : 'text-gray-600'}>{isFirst ? 'Building...' : 'Queued'}</span>
+                    <span className={`font-mono font-bold ${isFirst ? 'text-white' : 'text-gray-500'}`}>{formatTime(remaining)}</span>
                   </div>
-                  <div className="mt-2 h-1 bg-black/40 rounded-full overflow-hidden">
-                    <div 
-                       className={`h-full bg-amber-600 transition-all ${idx === 0 ? 'animate-pulse' : ''}`} 
-                       style={{ width: `${Math.max(0, Math.min(100, 100 - (remaining / 60) * 100))}%` }}
-                    ></div>
-                  </div>
+                  {isFirst && (
+                    <div className="mt-1.5 h-1 bg-black/40 rounded-full overflow-hidden">
+                      <div className="h-full bg-green-500/70 rounded-full animate-pulse" style={{ width: `${Math.max(5, Math.min(100, 100 - (remaining / 60) * 100))}%` }} />
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
       </div>
-
     </aside>
   );
 }
 
-function ResourceBar({ icon, label, value, rate, capacity, fillColor, trackColor }: any) {
-  const percentage = Math.min(100, (value / capacity) * 100);
+function ResourceBar({ label, value, rate, capacity, color, isStarving }: { label: string; value: number; rate: number; capacity: number; color: string; isStarving?: boolean }) {
+  const pct = Math.min(100, (value / capacity) * 100);
+  const isFull = pct > 95;
+  const isNegRate = rate < 0;
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex justify-between items-end text-[10px]">
-        <span className="text-[#8c6239] font-bold uppercase tracking-widest flex items-center gap-1">
-          <span className="text-xs">{icon}</span> {label}
-        </span>
-        <span className="font-mono text-amber-100/90 font-bold">{Math.floor(value).toLocaleString()}</span>
+    <div>
+      <div className="flex justify-between items-baseline mb-0.5">
+        <span className={`text-[10px] font-bold uppercase tracking-wider ${isStarving ? 'text-red-400 animate-pulse' : ''}`} style={isStarving ? {} : { color }}>{label}</span>
+        <div className="flex items-baseline gap-1.5">
+          <span className={`text-[11px] font-mono font-bold ${isStarving ? 'text-red-400' : isFull ? 'text-red-400' : 'text-gray-200'}`}>
+            {Math.floor(value).toLocaleString()}
+          </span>
+          <span className={`text-[8px] font-mono ${isNegRate ? 'text-red-400' : 'text-gray-600'}`}>{isNegRate ? '' : '+'}{Math.floor(rate)}/h</span>
+        </div>
       </div>
-      <div className="h-2 w-full rounded-full overflow-hidden border border-black/50 shadow-inner" style={{ backgroundColor: trackColor }}>
-        <div 
-          className="h-full transition-all duration-300 shadow-[0_0_10px_rgba(255,255,255,0.1)]" 
-          style={{ width: `${percentage}%`, backgroundColor: fillColor }}
-        ></div>
-      </div>
-      <div className="text-[9px] text-[#5e4126] font-mono text-right italic">
-        +{Math.floor(rate)}/hr
+      <div className="h-1.5 w-full rounded-full overflow-hidden bg-black/40">
+        <div
+          className={`h-full rounded-full transition-all duration-300 ${isStarving ? 'animate-pulse' : ''}`}
+          style={{ width: `${pct}%`, backgroundColor: isStarving ? '#ef4444' : color, opacity: isFull ? 1 : 0.7 }}
+        />
       </div>
     </div>
   );

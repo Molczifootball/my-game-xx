@@ -28,7 +28,7 @@ export default function DevTools() {
       owner: 'Barbarian',
       buildings: { ...MAX_LEVELS },
       units: { pikeman: 200, swordman: 200, axeman: 150, archer: 100, scout: 50, lightCavalry: 100, heavyCavalry: 50, horseArcher: 50, knight: 1, nobleman: 0 },
-      resources: { wood: 50000, clay: 50000, iron: 50000 },
+      resources: { wood: 50000, clay: 50000, iron: 50000, food: 50000 },
       endorsement: 100,
       upgrades: [],
       recruitment: [],

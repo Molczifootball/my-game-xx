@@ -1,14 +1,22 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { useGame, Buildings, getProductionRate, UNIT_ATLAS, Units } from '@/context/GameContext';
+import { useGame, Buildings, getProductionRate, UNIT_ATLAS, Units, BUILDING_REQUIREMENTS } from '@/context/GameContext';
 import { BUILDING_META, formatTime } from '@/utils/shared';
+
+const BUILDING_ORDER: (keyof Buildings)[] = ['headquarters', 'barracks', 'stable', 'castle', 'palace', 'cityWall', 'timberCamp', 'ironMine', 'clayPit', 'warehouse', 'farm'];
 
 export default function Home() {
   const { state, activeVillage, upgradeBuilding, recruitUnit, MAX_LEVELS } = useGame();
   const [selectedBuilding, setSelectedBuilding] = useState<keyof Buildings | null>(null);
   const [, setForceRender] = useState(0);
+
+  // Placement tool state
+  const [placementMode, setPlacementMode] = useState(false);
+  const [placementIndex, setPlacementIndex] = useState(0);
+  const [customPositions, setCustomPositions] = useState<Record<string, { x: string; y: string }>>({});
+  const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setForceRender(prev => prev + 1), 100);
@@ -52,6 +60,10 @@ export default function Home() {
     const costIron = Math.floor((isSpecial ? 200 : 100) * costMultiplier);
     const timeSecs = Math.floor((isSpecial ? 20 : 10) * Math.pow(1.15, targetLevel - 1));
 
+    const reqs = BUILDING_REQUIREMENTS[selectedBuilding];
+    const unmetReqs = reqs.filter(r => (vBuildings[r.requires] || 0) < r.level);
+    const reqsMet = unmetReqs.length === 0;
+
     const canAfford = currentWood >= costWood && currentClay >= costClay && currentIron >= costIron;
     const queueFull = vUpgrades.length >= 3;
     const isMax = targetLevel > maxLevel;
@@ -80,7 +92,30 @@ export default function Home() {
             </div>
 
             <div className="bg-[#242426] p-4 rounded-lg border border-[#333]">
-              {isMax ? (
+              {/* Building requirements */}
+              {reqs.length > 0 && (
+                <div className="mb-4">
+                  <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold block mb-2">Requirements</span>
+                  <div className="flex flex-col gap-1">
+                    {reqs.map(r => {
+                      const met = (vBuildings[r.requires] || 0) >= r.level;
+                      return (
+                        <div key={`${r.requires}-${r.level}`} className="flex items-center gap-2 text-[11px]">
+                          <span className={met ? 'text-green-400' : 'text-red-400'}>{met ? '✓' : '✗'}</span>
+                          <span className={met ? 'text-gray-400' : 'text-red-400'}>{BUILDING_META[r.requires].name} Lv.{r.level}</span>
+                          {!met && <span className="text-[9px] text-gray-600 font-mono">(current: {vBuildings[r.requires] || 0})</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {!reqsMet ? (
+                <div className="text-red-400/70 font-bold text-center py-3 text-xs uppercase tracking-widest border border-red-500/20 rounded bg-red-500/5">
+                  Requirements Not Met
+                </div>
+              ) : isMax ? (
                 <div className="text-amber-500 font-bold text-center py-2">Maximum Level Reached</div>
               ) : (
                 <>
@@ -106,7 +141,7 @@ export default function Home() {
                     <span className={currentClay >= costClay ? 'text-clay' : 'text-red-500'}>🧱 {costClay}</span>
                     <span className={currentIron >= costIron ? 'text-iron' : 'text-red-500'}>⛏️ {costIron}</span>
                   </div>
-                  <button 
+                  <button
                     disabled={queueFull || !canAfford}
                     onClick={() => { upgradeBuilding(selectedBuilding); setSelectedBuilding(null); }}
                     className={`w-full py-4 gold-button rounded transition-all active:scale-95
@@ -151,89 +186,176 @@ export default function Home() {
   };
 
   const isBuildingQueued = (id: keyof Buildings) => vUpgrades.some(u => u.building === id);
+  const isBuildingLocked = (id: keyof Buildings) => BUILDING_REQUIREMENTS[id].some(r => (vBuildings[r.requires] || 0) < r.level);
+
+  // Building positions — default or custom from placement tool
+  const DEFAULT_POSITIONS: Record<keyof Buildings, { x: string; y: string }> = {
+    headquarters: { x: '49.9%', y: '44.2%' },
+    barracks:     { x: '42.1%', y: '59.2%' },
+    stable:       { x: '58.6%', y: '59.2%' },
+    castle:       { x: '59.5%', y: '43.6%' },
+    palace:       { x: '57.2%', y: '29.1%' },
+    cityWall:     { x: '50.1%', y: '74.0%' },
+    timberCamp:   { x: '32.4%', y: '18.6%' },
+    ironMine:     { x: '72.4%', y: '19.4%' },
+    clayPit:      { x: '29.2%', y: '82.0%' },
+    warehouse:    { x: '49.8%', y: '87.2%' },
+    farm:         { x: '38.0%', y: '75.0%' },
+  };
+
+  const BUILDING_POSITIONS = { ...DEFAULT_POSITIONS, ...customPositions } as Record<keyof Buildings, { x: string; y: string }>;
+
+  // Placement tool click handler
+  const handlePlacementClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!placementMode || !mapRef.current) return;
+    const rect = mapRef.current.getBoundingClientRect();
+    const xPct = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+    const yPct = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+    const building = BUILDING_ORDER[placementIndex];
+
+    setCustomPositions(prev => ({ ...prev, [building]: { x: `${xPct}%`, y: `${yPct}%` } }));
+
+    if (placementIndex < BUILDING_ORDER.length - 1) {
+      setPlacementIndex(prev => prev + 1);
+    } else {
+      // Done — log all positions for copy-paste
+      const allPos = { ...DEFAULT_POSITIONS, ...customPositions, [building]: { x: `${xPct}%`, y: `${yPct}%` } };
+      console.log('=== BUILDING POSITIONS — Copy this into your code ===');
+      console.log(JSON.stringify(allPos, null, 2));
+      setPlacementMode(false);
+    }
+  }, [placementMode, placementIndex, customPositions]);
 
   return (
     <>
       {renderBuildingModal()}
-      <div className="flex-1 w-full h-full relative overflow-auto custom-scrollbar bg-[#0d0a06]">
-        
-        {/* Beautiful Medieval Background Rendering */}
-        <Image 
-          src="/images/village_bg.png" 
-          alt="Village Background" 
-          fill 
+      <div ref={mapRef} className="flex-1 min-h-0 w-full relative overflow-hidden bg-[#0d0a06]" onClick={placementMode ? handlePlacementClick : undefined}>
+
+        {/* Village Map Background */}
+        <Image
+          src="/images/village_map.png"
+          alt="Village Map"
+          fill
           priority
-          quality={85}
+          quality={90}
           sizes="100vw"
-          className="object-cover opacity-40 mix-blend-screen" 
+          className="object-cover"
         />
 
-        {/* Faint Grid Overlay */}
-        <div className="absolute inset-0 select-none opacity-20 pointer-events-none mix-blend-overlay" 
-             style={{
-               backgroundImage: 'linear-gradient(#f59e0b 1px, transparent 1px), linear-gradient(90deg, #f59e0b 1px, transparent 1px)', 
-               backgroundSize: '100px 100px', backgroundPosition: 'center'
-             }}></div>
-        
-        <div className="absolute inset-0 bg-radial-gradient from-transparent to-[#121212]/90 pointer-events-none z-10"></div>
-        
-        <div className="relative w-full h-full min-h-[600px] max-w-[1200px] mx-auto hidden sm:block pointer-events-none"></div> 
-        
-        <div className="absolute inset-0 w-full h-full min-h-[500px] max-w-[1200px] mx-auto py-10 px-4">
-          <MapNode id="headquarters" x="50%" y="30%" activeVillage={activeVillage} MAX_LEVELS={MAX_LEVELS} isQueued={isBuildingQueued('headquarters')} onClick={() => setSelectedBuilding('headquarters')} />
-          <MapNode id="timberCamp" x="25%" y="20%" activeVillage={activeVillage} MAX_LEVELS={MAX_LEVELS} isQueued={isBuildingQueued('timberCamp')} onClick={() => setSelectedBuilding('timberCamp')} />
-          <MapNode id="clayPit" x="80%" y="25%" activeVillage={activeVillage} MAX_LEVELS={MAX_LEVELS} isQueued={isBuildingQueued('clayPit')} onClick={() => setSelectedBuilding('clayPit')} />
-          <MapNode id="ironMine" x="15%" y="60%" activeVillage={activeVillage} MAX_LEVELS={MAX_LEVELS} isQueued={isBuildingQueued('ironMine')} onClick={() => setSelectedBuilding('ironMine')} />
-          <MapNode id="warehouse" x="65%" y="50%" activeVillage={activeVillage} MAX_LEVELS={MAX_LEVELS} isQueued={isBuildingQueued('warehouse')} onClick={() => setSelectedBuilding('warehouse')} />
-          <MapNode id="cityWall" x="50%" y="80%" activeVillage={activeVillage} MAX_LEVELS={MAX_LEVELS} isQueued={isBuildingQueued('cityWall')} onClick={() => setSelectedBuilding('cityWall')} />
-          <MapNode id="barracks" x="35%" y="45%" activeVillage={activeVillage} MAX_LEVELS={MAX_LEVELS} isQueued={isBuildingQueued('barracks')} onClick={() => setSelectedBuilding('barracks')} />
-          <MapNode id="stable" x="25%" y="70%" activeVillage={activeVillage} MAX_LEVELS={MAX_LEVELS} isQueued={isBuildingQueued('stable')} onClick={() => setSelectedBuilding('stable')} />
-          <MapNode id="castle" x="85%" y="70%" activeVillage={activeVillage} MAX_LEVELS={MAX_LEVELS} isQueued={isBuildingQueued('castle')} onClick={() => setSelectedBuilding('castle')} />
-          <MapNode id="palace" x="65%" y="20%" activeVillage={activeVillage} MAX_LEVELS={MAX_LEVELS} isQueued={isBuildingQueued('palace')} onClick={() => setSelectedBuilding('palace')} />
-        </div>
+        {/* Building nodes overlay */}
+        {!placementMode && (
+          <div className="absolute inset-0">
+            {BUILDING_ORDER.map(id => {
+              const pos = BUILDING_POSITIONS[id];
+              return (
+                <MapNode key={id} id={id} x={pos.x} y={pos.y} activeVillage={activeVillage} MAX_LEVELS={MAX_LEVELS} isQueued={isBuildingQueued(id)} isLocked={isBuildingLocked(id)} onClick={() => setSelectedBuilding(id)} />
+              );
+            })}
+          </div>
+        )}
+
+        {/* Placement mode: show already-placed markers */}
+        {placementMode && (
+          <div className="absolute inset-0">
+            {BUILDING_ORDER.slice(0, placementIndex).map(id => {
+              const pos = customPositions[id] || DEFAULT_POSITIONS[id];
+              return (
+                <div key={id} className="absolute -translate-x-1/2 -translate-y-1/2 z-30" style={{ left: pos.x, top: pos.y }}>
+                  <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-lg" />
+                  <span className="absolute top-5 left-1/2 -translate-x-1/2 text-[8px] text-green-300 bg-black/80 px-1.5 py-0.5 rounded whitespace-nowrap font-bold">
+                    {BUILDING_META[id].name}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Placement tool UI */}
+        {placementMode && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 glass-panel px-6 py-3 rounded-lg border border-primary/30 shadow-2xl text-center">
+            <div className="text-[9px] text-gray-400 uppercase tracking-widest mb-1">Click to place building {placementIndex + 1}/{BUILDING_ORDER.length}</div>
+            <div className="text-lg text-primary font-bold medieval-font tracking-widest">
+              {BUILDING_META[BUILDING_ORDER[placementIndex]].icon} {BUILDING_META[BUILDING_ORDER[placementIndex]].name}
+            </div>
+            <button onClick={(e) => { e.stopPropagation(); setPlacementMode(false); }} className="mt-2 text-[9px] text-gray-500 hover:text-red-400 uppercase tracking-widest">Cancel</button>
+          </div>
+        )}
+
+        {/* Placement mode toggle button */}
+        {!placementMode && (
+          <button
+            onClick={() => { setPlacementMode(true); setPlacementIndex(0); setCustomPositions({}); }}
+            className="absolute bottom-4 left-4 z-40 text-[9px] bg-purple-900/60 hover:bg-purple-900/80 text-purple-300 border border-purple-500/30 px-3 py-1.5 rounded font-bold uppercase tracking-widest transition-all"
+          >
+            🎯 Place Buildings
+          </button>
+        )}
+
+        {/* Crosshair cursor in placement mode */}
+        {placementMode && (
+          <style>{`div[class*="flex-1 min-h-0 w-full"] { cursor: crosshair !important; }`}</style>
+        )}
       </div>
     </>
   );
 }
 
 // Sub-component for buildings on the map
-function MapNode({ id, x, y, activeVillage, MAX_LEVELS, isQueued, onClick }: any) {
+function MapNode({ id, x, y, activeVillage, MAX_LEVELS, isQueued, isLocked, onClick }: any) {
   const meta = BUILDING_META[id as keyof Buildings];
   const level = activeVillage.buildings[id];
   const maxLevel = MAX_LEVELS[id];
   const isZero = level === 0;
 
   return (
-    <div 
-      className="absolute flex flex-col items-center transform -translate-x-1/2 -translate-y-1/2 group z-20 hover:z-30 cursor-pointer"
+    <div
+      className={`absolute flex flex-col items-center transform -translate-x-1/2 -translate-y-1/2 group z-20 hover:z-30 ${isLocked && isZero ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       style={{ left: x, top: y }}
       onClick={onClick}
     >
-      <div className={`
-        relative overflow-hidden w-16 h-16 sm:w-20 sm:h-20 lg:w-28 lg:h-28 mb-1 sm:mb-2 rounded-full border-[3px] border-solid shadow-[0_10px_30px_rgba(0,0,0,0.9)]
-        transition-all duration-300
-        ${level >= maxLevel ? 'border-[#ffb700] ring-4 ring-[#ffb700]/30' : isZero ? 'border-[#3e2c1e] opacity-60 grayscale scale-90' : 'border-[#8c6239] group-hover:border-[#ffb700] group-hover:scale-105 active:scale-95'}
-      `}>
-        {isQueued && (
-          <div className="absolute inset-0 bg-emerald-500/30 animate-pulse z-20 mix-blend-overlay"></div>
-        )}
-        <Image src={meta.image} alt={meta.name} fill sizes="256px" quality={90} priority className="object-cover z-10 opacity-100" />
-      </div>
+      {/* Pulsing ring indicator for active buildings */}
+      {!isZero && !isLocked && (
+        <div className={`absolute w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-all duration-300 pointer-events-none
+          ${level >= maxLevel ? 'border-primary/60 shadow-[0_0_12px_rgba(255,198,62,0.3)]' : 'border-white/20 group-hover:border-primary/50 group-hover:shadow-[0_0_15px_rgba(255,198,62,0.2)]'}
+          ${isQueued ? 'border-emerald-400/60 shadow-[0_0_12px_rgba(52,211,153,0.3)] animate-pulse' : ''}
+        `} />
+      )}
 
-      <div className="glass-panel px-3 py-1.5 rounded border border-outline-variant text-center min-w-[120px] shadow-2xl group-hover:bg-surface-highest transition-colors">
-        <h3 className="text-primary font-bold text-[10px] uppercase tracking-[0.15em] mb-0.5 whitespace-nowrap medieval-font">{meta.name}</h3>
-        {isZero ? (
-          <div className="text-[9px] text-on-surface-variant/40 font-bold uppercase tracking-widest">Ruins</div>
+      {/* Locked overlay dot */}
+      {isLocked && isZero && (
+        <div className="w-8 h-8 rounded-full bg-black/70 border border-red-900/40 flex items-center justify-center mb-0.5">
+          <span className="text-xs opacity-50">🔒</span>
+        </div>
+      )}
+
+      {/* Label */}
+      <div className={`px-2 py-0.5 rounded text-center shadow-lg transition-all backdrop-blur-sm
+        ${isLocked && isZero
+          ? 'bg-black/70 border border-red-900/30'
+          : isQueued
+            ? 'bg-emerald-900/80 border border-emerald-500/40'
+            : 'bg-black/75 border border-white/10 group-hover:border-primary/40 group-hover:bg-black/90'}
+      `}>
+        <h3 className={`font-bold text-[8px] sm:text-[9px] uppercase tracking-wider whitespace-nowrap
+          ${isLocked && isZero ? 'text-red-400/50' : isQueued ? 'text-emerald-300' : 'text-white/90 group-hover:text-primary'}
+        `}>{meta.name}</h3>
+        {isLocked && isZero ? (
+          <div className="text-[7px] text-red-400/40 font-bold">LOCKED</div>
+        ) : isZero ? (
+          <div className="text-[7px] text-gray-500 font-bold">RUINS</div>
         ) : (
-          <div className="text-[10px] text-on-surface-variant font-mono">
-            <span className={`${level >= maxLevel ? 'text-primary font-black animate-glow' : 'opacity-80'}`}>Lv.{level}</span> <span className="opacity-30">/ {maxLevel}</span>
+          <div className="text-[8px] font-mono">
+            <span className={level >= maxLevel ? 'text-primary font-bold' : 'text-gray-300'}>{level}</span>
+            <span className="text-gray-600">/{maxLevel}</span>
           </div>
         )}
       </div>
 
+      {/* Upgrading badge */}
       {isQueued && (
-        <div className="absolute -top-3 -right-3 sm:-right-4 bg-emerald-600 text-white text-[8px] sm:text-[10px] px-2 py-0.5 rounded-full border border-emerald-400 shadow-lg animate-bounce">
-          Upgrading
+        <div className="absolute -top-2 -right-4 bg-emerald-600 text-white text-[7px] px-1.5 py-0.5 rounded-full border border-emerald-400 shadow-lg animate-bounce font-bold">
+          ⚒️
         </div>
       )}
     </div>

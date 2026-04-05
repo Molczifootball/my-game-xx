@@ -18,6 +18,7 @@ export const BUILDING_META: Record<keyof Buildings, { name: string, desc: string
   stable: { name: "Stable", desc: "Breed warhorses and train devastating cavalry units.", icon: "🐎", image: "/images/stable.png" },
   castle: { name: "Castle", desc: "A magnificent fortress to train your loyal Knight.", icon: "🛡️", image: "/images/castle.png" },
   palace: { name: "Palace", desc: "The seat of authority. Grants the ability to train Noblemen to conquer villages.", icon: "👑", image: "/images/palace.png" },
+  farm: { name: "Farm", desc: "Produces food to sustain your army. Without food, soldiers desert.", icon: "🌾", image: "/images/headquarters.png" },
 };
 export const calculateDistance = (x1: number, y1: number, x2: number, y2: number) => {
   return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));

@@ -20,30 +20,33 @@ function timeAgo(ts: number): string {
 export default function ReportsPage() {
   const { state, markReportAsRead } = useGame();
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'attack' | 'scout'>('all');
+  const [filter, setFilter] = useState<'all' | 'attack' | 'scout' | 'incoming'>('all');
   const [sort, setSort] = useState<'newest' | 'oldest' | 'target'>('newest');
   const [mobileDetail, setMobileDetail] = useState(false);
 
   // Stats
   const stats = useMemo(() => {
     const reports = state.reports;
-    let attacks = 0, scouts = 0, victories = 0;
+    let attacks = 0, scouts = 0, victories = 0, incoming = 0;
     let lootW = 0, lootC = 0, lootI = 0, totalLosses = 0;
     for (const r of reports) {
-      if (r.type === 'attack') { attacks++; if (r.result === 'victory') victories++; }
+      if (r.direction === 'incoming') { incoming++; }
+      else if (r.type === 'attack') { attacks++; if (r.result === 'victory') victories++; }
       else scouts++;
       lootW += r.loot.wood; lootC += r.loot.clay; lootI += r.loot.iron;
       if (r.attackerLosses) {
         Object.values(r.attackerLosses).forEach(v => { totalLosses += (v as number) || 0; });
       }
     }
-    return { total: reports.length, attacks, scouts, victories, victoryRate: attacks > 0 ? Math.round((victories / attacks) * 100) : 0, lootW, lootC, lootI, totalLosses };
+    return { total: reports.length, attacks, scouts, victories, incoming, victoryRate: attacks > 0 ? Math.round((victories / attacks) * 100) : 0, lootW, lootC, lootI, totalLosses };
   }, [state.reports]);
 
   // Filtered + sorted
   const filteredReports = useMemo(() => {
     let list = state.reports;
-    if (filter !== 'all') list = list.filter(r => r.type === filter);
+    if (filter === 'incoming') list = list.filter(r => r.direction === 'incoming');
+    else if (filter === 'attack') list = list.filter(r => r.type === 'attack' && r.direction !== 'incoming');
+    else if (filter === 'scout') list = list.filter(r => r.type === 'scout');
     if (sort === 'oldest') list = [...list].reverse();
     if (sort === 'target') list = [...list].sort((a, b) => a.targetName.localeCompare(b.targetName));
     return list;
@@ -85,9 +88,9 @@ export default function ReportsPage() {
       {stats.total > 0 && (
         <div className="shrink-0 px-6 py-2.5 border-b border-outline-variant bg-surface-base flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            {(['all', 'attack', 'scout'] as const).map(f => (
+            {(['all', 'attack', 'scout', 'incoming'] as const).map(f => (
               <button key={f} onClick={() => setFilter(f)} className={`text-[9px] px-3 py-1 rounded-full font-bold uppercase tracking-widest transition-all border ${filter === f ? 'bg-primary/20 text-primary border-primary/40' : 'text-gray-500 border-outline-variant hover:text-primary hover:border-primary/30'}`}>
-                {f === 'all' ? `All (${stats.total})` : f === 'attack' ? `⚔️ Attacks (${stats.attacks})` : `🕵️ Scouts (${stats.scouts})`}
+                {f === 'all' ? `All (${stats.total})` : f === 'attack' ? `⚔️ Attacks (${stats.attacks})` : f === 'scout' ? `🕵️ Scouts (${stats.scouts})` : `🛡️ Incoming (${stats.incoming})`}
               </button>
             ))}
           </div>
@@ -119,7 +122,7 @@ export default function ReportsPage() {
                 key={report.id}
                 onClick={() => selectReport(report.id, report.isRead)}
                 className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-all border-b border-outline-variant/50 border-l-[3px] hover:bg-surface-high group
-                  ${selectedReportId === report.id ? 'bg-surface-high border-l-primary' : report.type === 'attack' ? 'border-l-red-500/40' : 'border-l-blue-500/40'}
+                  ${selectedReportId === report.id ? 'bg-surface-high border-l-primary' : report.direction === 'incoming' ? 'border-l-orange-500/40' : report.type === 'attack' ? 'border-l-red-500/40' : 'border-l-blue-500/40'}
                   ${!report.isRead ? 'bg-surface-base' : ''}
                 `}
               >
@@ -130,7 +133,7 @@ export default function ReportsPage() {
 
                 {/* Icon */}
                 <span className={`text-xl shrink-0 ${report.isRead ? 'opacity-40' : ''}`}>
-                  {report.type === 'attack' ? '⚔️' : '🕵️'}
+                  {report.direction === 'incoming' ? '🛡️' : report.type === 'attack' ? '⚔️' : '🕵️'}
                 </span>
 
                 {/* Info */}
@@ -215,14 +218,22 @@ function ReportDetail({ report }: { report: BattleReport }) {
     <div className="flex flex-col gap-5 animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex items-center gap-4 pb-4 border-b border-outline-variant">
-        <span className="text-4xl">{report.type === 'attack' ? '⚔️' : '🕵️'}</span>
+        <span className="text-4xl">{report.direction === 'incoming' ? '🛡️' : report.type === 'attack' ? '⚔️' : '🕵️'}</span>
         <div>
           <h2 className="text-xl text-white font-bold medieval-font tracking-widest uppercase">
-            {report.type === 'attack' ? 'Assault Report' : 'Intelligence Summary'}
+            {report.direction === 'incoming'
+              ? (report.result === 'victory' ? 'Village Defended' : 'Village Raided')
+              : (report.type === 'attack' ? 'Assault Report' : 'Intelligence Summary')
+            }
           </h2>
           <div className="flex items-center gap-3 mt-1">
+            {report.direction === 'incoming' && (
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-orange-500/15 text-orange-400">
+                Incoming
+              </span>
+            )}
             <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${report.result === 'victory' ? 'bg-emerald-500/15 text-emerald-400' : report.result === 'defeat' ? 'bg-red-500/15 text-red-400' : 'bg-blue-500/15 text-blue-400'}`}>
-              {report.result}
+              {report.direction === 'incoming' ? (report.result === 'victory' ? 'Defended' : 'Pillaged') : report.result}
             </span>
             <span className="text-[10px] text-gray-500 font-mono">{new Date(report.timestamp).toLocaleString()}</span>
           </div>
@@ -232,13 +243,19 @@ function ReportDetail({ report }: { report: BattleReport }) {
       {/* Origin + Target info */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-black/30 border border-outline-variant px-4 py-3 rounded">
-          <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold block">From</span>
-          <span className="text-sm text-blue-400 font-bold">{report.originName || '—'}</span>
+          <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold block">
+            {report.direction === 'incoming' ? 'Attacker' : 'From'}
+          </span>
+          <span className={`text-sm font-bold ${report.direction === 'incoming' ? 'text-red-400' : 'text-blue-400'}`}>
+            {report.direction === 'incoming' ? (report.attackerName || 'Barbarian') : (report.originName || '—')}
+          </span>
           {report.originX && <span className="text-[9px] text-gray-600 font-mono block">{report.originX}|{report.originY}</span>}
         </div>
         <div className="bg-black/30 border border-outline-variant px-4 py-3 rounded">
-          <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold block">Target</span>
-          <span className="text-sm text-red-400 font-bold">{report.targetName}</span>
+          <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold block">
+            {report.direction === 'incoming' ? 'Your Village' : 'Target'}
+          </span>
+          <span className={`text-sm font-bold ${report.direction === 'incoming' ? 'text-blue-400' : 'text-red-400'}`}>{report.targetName}</span>
         </div>
         <div className="bg-black/30 border border-outline-variant px-4 py-3 rounded">
           <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold block">Coordinates</span>
@@ -311,7 +328,9 @@ function ReportDetail({ report }: { report: BattleReport }) {
           <div className="grid grid-cols-2 gap-3">
             {/* Attacker */}
             <div className="bg-black/20 border border-outline-variant rounded p-4">
-              <h3 className="text-[9px] text-blue-400/70 font-bold uppercase tracking-[0.2em] mb-3">🛡️ Your Forces</h3>
+              <h3 className="text-[9px] text-blue-400/70 font-bold uppercase tracking-[0.2em] mb-3">
+                {report.direction === 'incoming' ? `⚔️ ${report.attackerName || 'Barbarian'} Forces` : '🛡️ Your Forces'}
+              </h3>
               <div className="flex flex-col gap-1">
                 {UNIT_KEYS.filter(u => (report.attackerUnits?.[u] || 0) > 0).map(u => {
                   const sent = report.attackerUnits?.[u] || 0;
@@ -331,7 +350,9 @@ function ReportDetail({ report }: { report: BattleReport }) {
 
             {/* Defender */}
             <div className="bg-black/20 border border-outline-variant rounded p-4">
-              <h3 className="text-[9px] text-red-400/70 font-bold uppercase tracking-[0.2em] mb-3">🏯 Defender</h3>
+              <h3 className="text-[9px] text-red-400/70 font-bold uppercase tracking-[0.2em] mb-3">
+                {report.direction === 'incoming' ? '🛡️ Your Defense' : '🏯 Defender'}
+              </h3>
               {report.defenderUnits && Object.entries(report.defenderUnits).some(([, v]) => (v as number) > 0) ? (
                 <div className="flex flex-col gap-1">
                   {UNIT_KEYS.filter(u => (report.defenderUnits?.[u] || 0) > 0).map(u => {

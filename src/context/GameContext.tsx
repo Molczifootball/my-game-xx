@@ -9,6 +9,7 @@ export interface Resources {
   wood: number;
   clay: number;
   iron: number;
+  food: number;
 }
 
 // Building levels
@@ -23,6 +24,7 @@ export interface Buildings {
   stable: number;
   castle: number;
   palace: number;
+  farm: number;
 }
 
 // Units
@@ -39,18 +41,30 @@ export interface Units {
   nobleman: number;
 }
 
-export const UNIT_ATLAS: Record<keyof Units, { name: string, reqB: keyof Buildings, reqLvl: number, w: number, c: number, i: number, time: number, speed: number, carry: number, atk: number, def: number, defCav: number, defArch: number }> = {
-  pikeman: { name: "Pikeman", reqB: 'barracks', reqLvl: 1, w: 50, c: 30, i: 10, time: 15, speed: 8, carry: 25, atk: 10, def: 15, defCav: 45, defArch: 20 },
-  swordman: { name: "Swordsman", reqB: 'barracks', reqLvl: 1, w: 50, c: 30, i: 10, time: 20, speed: 10, carry: 15, atk: 25, def: 50, defCav: 15, defArch: 40 },
-  axeman: { name: "Axeman", reqB: 'barracks', reqLvl: 2, w: 50, c: 30, i: 10, time: 18, speed: 8, carry: 10, atk: 40, def: 10, defCav: 5, defArch: 10 },
-  archer: { name: "Archer", reqB: 'barracks', reqLvl: 5, w: 100, c: 30, i: 60, time: 25, speed: 8, carry: 10, atk: 15, def: 50, defCav: 40, defArch: 5 },
-  scout: { name: "Scout", reqB: 'stable', reqLvl: 1, w: 50, c: 50, i: 20, time: 10, speed: 3, carry: 0, atk: 0, def: 2, defCav: 1, defArch: 2 },
-  lightCavalry: { name: "Light Cavalry", reqB: 'stable', reqLvl: 3, w: 125, c: 100, i: 250, time: 30, speed: 4, carry: 80, atk: 130, def: 30, defCav: 40, defArch: 30 },
-  heavyCavalry: { name: "Heavy Cavalry", reqB: 'stable', reqLvl: 5, w: 200, c: 150, i: 600, time: 45, speed: 5, carry: 50, atk: 150, def: 200, defCav: 80, defArch: 180 },
-  horseArcher: { name: "Horse Archer", reqB: 'stable', reqLvl: 5, w: 250, c: 100, i: 150, time: 35, speed: 5, carry: 50, atk: 120, def: 40, defCav: 30, defArch: 50 },
-  knight: { name: "Knight", reqB: 'castle', reqLvl: 1, w: 1000, c: 1000, i: 1000, time: 120, speed: 4, carry: 100, atk: 150, def: 250, defCav: 250, defArch: 250 },
-  nobleman: { name: "Nobleman", reqB: 'palace', reqLvl: 1, w: 40000, c: 50000, i: 50000, time: 300, speed: 20, carry: 0, atk: 30, def: 100, defCav: 100, defArch: 100 },
+export const UNIT_ATLAS: Record<keyof Units, { name: string, reqB: keyof Buildings, reqLvl: number, w: number, c: number, i: number, food: number, time: number, speed: number, carry: number, atk: number, def: number, defCav: number, defArch: number }> = {
+  pikeman:      { name: "Pikeman",       reqB: 'barracks', reqLvl: 1,  w: 50,    c: 30,    i: 10,    food: 1,  time: 15,  speed: 8,  carry: 25,  atk: 10,  def: 15,  defCav: 45,  defArch: 20 },
+  swordman:     { name: "Swordsman",     reqB: 'barracks', reqLvl: 1,  w: 50,    c: 30,    i: 10,    food: 1,  time: 20,  speed: 10, carry: 15,  atk: 25,  def: 50,  defCav: 15,  defArch: 40 },
+  axeman:       { name: "Axeman",        reqB: 'barracks', reqLvl: 2,  w: 50,    c: 30,    i: 10,    food: 1,  time: 18,  speed: 8,  carry: 10,  atk: 40,  def: 10,  defCav: 5,   defArch: 10 },
+  archer:       { name: "Archer",        reqB: 'barracks', reqLvl: 5,  w: 100,   c: 30,    i: 60,    food: 1,  time: 25,  speed: 8,  carry: 10,  atk: 15,  def: 50,  defCav: 40,  defArch: 5 },
+  scout:        { name: "Scout",         reqB: 'stable',   reqLvl: 1,  w: 50,    c: 50,    i: 20,    food: 2,  time: 10,  speed: 3,  carry: 0,   atk: 0,   def: 2,   defCav: 1,   defArch: 2 },
+  lightCavalry: { name: "Light Cavalry", reqB: 'stable',   reqLvl: 3,  w: 125,   c: 100,   i: 250,   food: 3,  time: 30,  speed: 4,  carry: 80,  atk: 130, def: 30,  defCav: 40,  defArch: 30 },
+  heavyCavalry: { name: "Heavy Cavalry", reqB: 'stable',   reqLvl: 5,  w: 200,   c: 150,   i: 600,   food: 4,  time: 45,  speed: 5,  carry: 50,  atk: 150, def: 200, defCav: 80,  defArch: 180 },
+  horseArcher:  { name: "Horse Archer",  reqB: 'stable',   reqLvl: 5,  w: 250,   c: 100,   i: 150,   food: 3,  time: 35,  speed: 5,  carry: 50,  atk: 120, def: 40,  defCav: 30,  defArch: 50 },
+  knight:       { name: "Knight",        reqB: 'castle',   reqLvl: 1,  w: 1000,  c: 1000,  i: 1000,  food: 6,  time: 120, speed: 4,  carry: 100, atk: 150, def: 250, defCav: 250, defArch: 250 },
+  nobleman:     { name: "Nobleman",      reqB: 'palace',   reqLvl: 1,  w: 40000, c: 50000, i: 50000, food: 10, time: 300, speed: 20, carry: 0,   atk: 30,  def: 100, defCav: 100, defArch: 100 },
 };
+
+/** Calculate total food upkeep per hour for a village's units */
+export const getFoodUpkeep = (units: Partial<Units>): number => {
+  let total = 0;
+  (Object.entries(units) as [keyof Units, number][]).forEach(([u, c]) => {
+    total += (c || 0) * UNIT_ATLAS[u].food;
+  });
+  return total;
+};
+
+/** Food production per hour based on farm level */
+export const getFoodProduction = (farmLevel: number): number => farmLevel === 0 ? 0 : 50 * Math.pow(1.15, farmLevel - 1);
 
 export interface ActiveUpgrade {
   id: string; 
@@ -88,6 +102,7 @@ export interface BattleReport {
   targetName: string;
   type: 'attack' | 'scout';
   result: 'victory' | 'defeat' | 'scouted';
+  direction: 'outgoing' | 'incoming'; // outgoing = you attacked, incoming = you were attacked
   loot: Resources;
   attackerUnits?: Partial<Units>;
   attackerLosses?: Partial<Units>;
@@ -161,7 +176,22 @@ interface GameContextType {
 }
 
 const MAX_LEVELS: Record<keyof Buildings, number> = {
-  headquarters: 20, timberCamp: 30, clayPit: 30, ironMine: 30, warehouse: 20, cityWall: 20, barracks: 25, stable: 20, castle: 1, palace: 1,
+  headquarters: 20, timberCamp: 30, clayPit: 30, ironMine: 30, warehouse: 20, cityWall: 20, barracks: 25, stable: 20, castle: 1, palace: 1, farm: 30,
+};
+
+// Building prerequisites: { building: [{ requires: building, level: minLevel }] }
+export const BUILDING_REQUIREMENTS: Record<keyof Buildings, { requires: keyof Buildings; level: number }[]> = {
+  headquarters: [],
+  timberCamp: [{ requires: 'headquarters', level: 1 }],
+  clayPit: [{ requires: 'headquarters', level: 1 }],
+  ironMine: [{ requires: 'headquarters', level: 1 }],
+  warehouse: [{ requires: 'headquarters', level: 1 }],
+  cityWall: [{ requires: 'headquarters', level: 3 }, { requires: 'barracks', level: 1 }],
+  barracks: [{ requires: 'headquarters', level: 3 }],
+  stable: [{ requires: 'headquarters', level: 10 }, { requires: 'barracks', level: 5 }],
+  castle: [{ requires: 'headquarters', level: 20 }, { requires: 'stable', level: 10 }, { requires: 'barracks', level: 15 }],
+  palace: [{ requires: 'headquarters', level: 20 }, { requires: 'stable', level: 5 }, { requires: 'barracks', level: 10 }],
+  farm: [{ requires: 'headquarters', level: 1 }],
 };
 
 const generateWorldMap = (): MapTile[] => {
@@ -217,10 +247,10 @@ const generateWorldMap = (): MapTile[] => {
       let b: Buildings | undefined, r: Resources | undefined, u: Partial<Units> | undefined, up: ActiveUpgrade[] | undefined, rec: ActiveRecruitment[] | undefined;
       
       if (isBarbarian || isPlayer) {
-        b = isPlayer 
-          ? { headquarters: 1, timberCamp: 1, clayPit: 1, ironMine: 1, warehouse: 1, cityWall: 0, barracks: 0, stable: 0, castle: 0, palace: 0 }
-          : { headquarters: Math.floor(Math.random() * 15) + 1, timberCamp: Math.floor(Math.random() * 20), clayPit: Math.floor(Math.random() * 20), ironMine: Math.floor(Math.random() * 20), warehouse: Math.floor(Math.random() * 10) + 1, cityWall: Math.floor(Math.random() * 10), barracks: Math.floor(Math.random() * 10), stable: Math.floor(Math.random() * 5), castle: 0, palace: 0 };
-        r = isPlayer ? { wood: 500, clay: 500, iron: 500 } : { wood: Math.floor(Math.random() * 5000), clay: Math.floor(Math.random() * 5000), iron: Math.floor(Math.random() * 5000) };
+        b = isPlayer
+          ? { headquarters: 1, timberCamp: 1, clayPit: 1, ironMine: 1, warehouse: 1, cityWall: 0, barracks: 0, stable: 0, castle: 0, palace: 0, farm: 1 }
+          : { headquarters: Math.floor(Math.random() * 15) + 1, timberCamp: Math.floor(Math.random() * 20), clayPit: Math.floor(Math.random() * 20), ironMine: Math.floor(Math.random() * 20), warehouse: Math.floor(Math.random() * 10) + 1, cityWall: Math.floor(Math.random() * 10), barracks: Math.floor(Math.random() * 10), stable: Math.floor(Math.random() * 5), castle: 0, palace: 0, farm: Math.floor(Math.random() * 15) + 1 };
+        r = isPlayer ? { wood: 500, clay: 500, iron: 500, food: 500 } : { wood: Math.floor(Math.random() * 5000), clay: Math.floor(Math.random() * 5000), iron: Math.floor(Math.random() * 5000), food: Math.floor(Math.random() * 3000) };
         u = isPlayer ? { pikeman: 0, swordman: 0, axeman: 0, archer: 0, scout: 0, lightCavalry: 0, heavyCavalry: 0, horseArcher: 0, knight: 0, nobleman: 0 } : { pikeman: Math.floor(Math.random() * 20), swordman: Math.floor(Math.random() * 10) };
         if (isPlayer) { up = []; rec = []; }
       }
@@ -308,6 +338,25 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           tr.clay = Math.min(cap, tr.clay + (getProductionRate(tb.clayPit)/3600 * dSec));
           tr.iron = Math.min(cap, tr.iron + (getProductionRate(tb.ironMine)/3600 * dSec));
 
+          // Food production & upkeep
+          const foodProd = getFoodProduction(tb.farm || 0);
+          const foodUpkeep = getFoodUpkeep(tu);
+          const netFood = (foodProd - foodUpkeep) / 3600 * dSec;
+          tr.food = Math.min(cap, Math.max(0, (tr.food || 0) + netFood));
+
+          // Desertion: if food is 0 and upkeep > production, units desert
+          if (tr.food <= 0 && foodUpkeep > foodProd) {
+            const desertionRate = 0.01 * dSec; // 1% per second when starving
+            const unitKeys = Object.keys(tu) as (keyof Units)[];
+            // Desert weakest units first (lowest atk value)
+            const sorted = unitKeys.filter(u => (tu[u] || 0) > 0).sort((a, b) => UNIT_ATLAS[a].atk - UNIT_ATLAS[b].atk);
+            if (sorted.length > 0) {
+              const u = sorted[0];
+              const lost = Math.max(1, Math.floor((tu[u] || 0) * desertionRate));
+              tu[u] = Math.max(0, (tu[u] || 0) - lost);
+            }
+          }
+
           // Building Upgrades
           const nUpg = (tile.upgrades || []).filter(u => {
             if (now >= u.completesAt) { tb[u.building] = u.targetLevel; return false; }
@@ -329,7 +378,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const tIdx = nMap.findIndex(t => t.x === cmd.targetX && t.y === cmd.targetY);
             if (tIdx !== -1) {
               const tile = { ...nMap[tIdx] };
-              let loot = { wood: 0, clay: 0, iron: 0 };
+              let loot = { wood: 0, clay: 0, iron: 0, food: 0 };
               let sAtk = { ...cmd.units };
               let aL = {} as Partial<Units>;
               let dL = {} as Partial<Units>;
@@ -369,7 +418,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     const r = tile.resources;
                     loot.wood = Math.min(Math.floor(r.wood), cap); r.wood -= loot.wood; cap -= loot.wood;
                     loot.clay = Math.min(Math.floor(r.clay), cap); r.clay -= loot.clay; cap -= loot.clay;
-                    loot.iron = Math.min(Math.floor(r.iron), cap); r.iron -= loot.iron;
+                    loot.iron = Math.min(Math.floor(r.iron), cap); r.iron -= loot.iron; cap -= loot.iron;
+                    loot.food = Math.min(Math.floor(r.food || 0), cap); r.food = (r.food || 0) - loot.food;
                   }
                   if ((sAtk.nobleman ?? 0) > 0) {
                     let totalDrop = 0;
@@ -387,15 +437,35 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
               // 3. REPORT GENERATION
               const originTile = nMap.find(t => t.x === cmd.originX && t.y === cmd.originY);
-              nRep.unshift({
-                id: Math.random().toString(36).substr(2, 9), timestamp: now, targetX: cmd.targetX, targetY: cmd.targetY, targetName: tile.name || 'Barbarian',
-                type: cmd.type, result: cmd.type === 'scout' ? 'scouted' : (Object.entries(sAtk).some(([k, v]) => k !== 'scout' && (v || 0) > 0) ? 'victory' : 'defeat'),
-                loot, attackerUnits: cmd.units, attackerLosses: aL, defenderUnits: nMap[tIdx].units, defenderLosses: dL,
-                targetResources: scoutIntel?.resources, targetUnits: scoutIntel?.units, targetBuildings: scoutIntel?.buildings,
-                attackerName: ps.playerName,
-                originX: cmd.originX, originY: cmd.originY, originName: originTile?.name || 'Unknown',
-                isRead: false 
-              });
+              const isPlayerAttacker = originTile?.owner === ps.playerName;
+              const isPlayerDefender = tile.owner === ps.playerName;
+              const attackerWon = Object.entries(sAtk).some(([k, v]) => k !== 'scout' && (v || 0) > 0);
+              const reportResult = cmd.type === 'scout' ? 'scouted' as const : (attackerWon ? 'victory' as const : 'defeat' as const);
+
+              // Outgoing report (for attacker — player attacked someone)
+              if (isPlayerAttacker) {
+                nRep.unshift({
+                  id: Math.random().toString(36).substr(2, 9), timestamp: now, targetX: cmd.targetX, targetY: cmd.targetY, targetName: tile.name || 'Barbarian',
+                  type: cmd.type, result: reportResult, direction: 'outgoing',
+                  loot, attackerUnits: cmd.units, attackerLosses: aL, defenderUnits: nMap[tIdx].units, defenderLosses: dL,
+                  targetResources: scoutIntel?.resources, targetUnits: scoutIntel?.units, targetBuildings: scoutIntel?.buildings,
+                  attackerName: ps.playerName,
+                  originX: cmd.originX, originY: cmd.originY, originName: originTile?.name || 'Unknown',
+                  isRead: false
+                });
+              }
+
+              // Incoming report (for defender — player was attacked)
+              if (isPlayerDefender && !isPlayerAttacker) {
+                nRep.unshift({
+                  id: Math.random().toString(36).substr(2, 9), timestamp: now, targetX: cmd.targetX, targetY: cmd.targetY, targetName: tile.name || 'Your Village',
+                  type: cmd.type, result: attackerWon ? 'defeat' as const : 'victory' as const, direction: 'incoming',
+                  loot, attackerUnits: cmd.units, attackerLosses: aL, defenderUnits: nMap[tIdx].units, defenderLosses: dL,
+                  attackerName: originTile?.owner || 'Barbarian',
+                  originX: cmd.originX, originY: cmd.originY, originName: originTile?.name || 'Barbarian Outpost',
+                  isRead: false
+                });
+              }
 
               nMap[tIdx] = tile;
               nCmd.push({ ...cmd, status: 'returning', returnsAt: now + cmd.travelDurationMs, loot, units: sAtk });
@@ -404,7 +474,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const originIdx = nMap.findIndex(t => t.x === cmd.originX && t.y === cmd.originY);
             if (originIdx !== -1 && nMap[originIdx].units && nMap[originIdx].resources) {
                (Object.keys(cmd.units) as (keyof Units)[]).forEach(u => (nMap[originIdx].units as any)[u] += (cmd.units[u] || 0));
-               nMap[originIdx].resources!.wood += cmd.loot.wood; nMap[originIdx].resources!.clay += cmd.loot.clay; nMap[originIdx].resources!.iron += cmd.loot.iron;
+               nMap[originIdx].resources!.wood += cmd.loot.wood; nMap[originIdx].resources!.clay += cmd.loot.clay; nMap[originIdx].resources!.iron += cmd.loot.iron; nMap[originIdx].resources!.food = (nMap[originIdx].resources!.food || 0) + (cmd.loot.food || 0);
             }
           } else { nCmd.push(cmd); }
         });
@@ -423,6 +493,62 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { ...t, resources: res, units };
         });
 
+        // 4. Barbarian raids on player villages (random chance every tick)
+        if (Math.random() < 0.003) { // ~0.3% per second, roughly once every 5-6 minutes
+          const playerVillages = nMap.filter(t => t.owner === ps.playerName);
+          const barbarianVillages = nMap.filter(t => t.owner === 'Barbarian' && t.units &&
+            ((t.units.pikeman || 0) + (t.units.swordman || 0)) >= 5
+          );
+          if (playerVillages.length > 0 && barbarianVillages.length > 0) {
+            // Pick random player village as target
+            const target = playerVillages[Math.floor(Math.random() * playerVillages.length)];
+            // Pick nearest barbarian with troops
+            const sorted = barbarianVillages
+              .map(b => ({ b, dist: Math.sqrt(Math.pow(b.x - target.x, 2) + Math.pow(b.y - target.y, 2)) }))
+              .filter(e => e.dist < 15) // Only nearby barbarians
+              .sort((a, b) => a.dist - b.dist);
+            if (sorted.length > 0) {
+              const attacker = sorted[Math.floor(Math.random() * Math.min(3, sorted.length))].b;
+              // Send 30-70% of their troops
+              const ratio = 0.3 + Math.random() * 0.4;
+              const raidUnits: Partial<Units> = {};
+              let hasUnits = false;
+              let slowestSpeed = 0;
+              (['pikeman', 'swordman', 'axeman'] as (keyof Units)[]).forEach(u => {
+                const count = Math.floor((attacker.units![u] || 0) * ratio);
+                if (count > 0) {
+                  raidUnits[u] = count;
+                  hasUnits = true;
+                  if (UNIT_ATLAS[u].speed > slowestSpeed) slowestSpeed = UNIT_ATLAS[u].speed;
+                }
+              });
+              if (hasUnits && slowestSpeed > 0) {
+                const dist = Math.sqrt(Math.pow(target.x - attacker.x, 2) + Math.pow(target.y - attacker.y, 2));
+                const travelMs = Math.floor(dist * slowestSpeed) * 1000;
+                // Deduct units from barbarian village
+                const aIdx = nMap.findIndex(t => t.id === attacker.id);
+                if (aIdx !== -1) {
+                  const au = { ...nMap[aIdx].units };
+                  (Object.keys(raidUnits) as (keyof Units)[]).forEach(u => (au as any)[u] -= (raidUnits[u] || 0));
+                  nMap[aIdx] = { ...nMap[aIdx], units: au };
+                }
+                nCmd.push({
+                  id: Math.random().toString(36).substr(2, 9),
+                  type: 'attack',
+                  status: 'marching',
+                  originX: attacker.x, originY: attacker.y,
+                  targetX: target.x, targetY: target.y,
+                  units: raidUnits,
+                  travelDurationMs: travelMs,
+                  arrivesAt: now + travelMs,
+                  returnsAt: 0,
+                  loot: { wood: 0, clay: 0, iron: 0, food: 0 },
+                });
+              }
+            }
+          }
+        }
+
         return { ...ps, activeCommands: nCmd, reports: nRep, worldMap: nMap, lastTick: now };
       });
     }, 1000);
@@ -435,13 +561,20 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!activeVillage || (activeVillage.upgrades?.length || 0) >= 3) return alert("Queue full!");
     const lvl = activeVillage.buildings![b] + activeVillage.upgrades!.filter(u => u.building === b).length + 1;
     if (lvl > MAX_LEVELS[b]) return alert("Max level!");
+    // Check building prerequisites
+    const reqs = BUILDING_REQUIREMENTS[b];
+    for (const req of reqs) {
+      if ((activeVillage.buildings![req.requires] || 0) < req.level) {
+        return alert(`Requires ${req.requires} level ${req.level}!`);
+      }
+    }
     const mult = Math.pow(1.2, lvl - 1); const sp = ['castle','barracks','cityWall','stable','palace'].includes(b);
     const cost = { wood: (sp ? 200 : 100) * mult, clay: (sp ? 200 : 100) * mult, iron: (sp ? 200 : 100) * mult };
     if (activeVillage.resources!.wood >= cost.wood && activeVillage.resources!.clay >= cost.clay && activeVillage.resources!.iron >= cost.iron) {
       const t = (sp ? 20 : 10) * Math.pow(1.15, lvl - 1);
       const s = activeVillage.upgrades!.length > 0 ? activeVillage.upgrades![activeVillage.upgrades!.length - 1].completesAt : Date.now();
       updateWorldTile(activeVillage.x, activeVillage.y, { 
-        resources: { wood: activeVillage.resources!.wood - cost.wood, clay: activeVillage.resources!.clay - cost.clay, iron: activeVillage.resources!.iron - cost.iron }, 
+        resources: { wood: activeVillage.resources!.wood - cost.wood, clay: activeVillage.resources!.clay - cost.clay, iron: activeVillage.resources!.iron - cost.iron, food: activeVillage.resources!.food || 0 },
         upgrades: [...activeVillage.upgrades!, { id: Math.random().toString(36).substr(2, 9), building: b, targetLevel: lvl, completesAt: s + t * 1000 }] 
       });
     } else alert("No resources!");
@@ -454,7 +587,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const t = d.time * (['knight','nobleman'].includes(u) ? 1 : Math.pow(0.95, activeVillage.buildings![d.reqB] - 1));
       const s = activeVillage.recruitment!.length > 0 ? activeVillage.recruitment![activeVillage.recruitment!.length - 1].completesAt : Date.now();
       updateWorldTile(activeVillage.x, activeVillage.y, { 
-        resources: { wood: activeVillage.resources!.wood - d.w, clay: activeVillage.resources!.clay - d.c, iron: activeVillage.resources!.iron - d.i }, 
+        resources: { wood: activeVillage.resources!.wood - d.w, clay: activeVillage.resources!.clay - d.c, iron: activeVillage.resources!.iron - d.i, food: activeVillage.resources!.food || 0 },
         recruitment: [...activeVillage.recruitment!, { id: Math.random().toString(36).substr(2, 9), unit: u, completesAt: s + t * 1000 }] 
       });
     } else alert("No resources!");
@@ -474,14 +607,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         return tile;
       });
-      return { ...p, worldMap: nMap, activeCommands: [...p.activeCommands, { id: Math.random().toString(36).substr(2, 9), type, status: 'marching', originX: activeVillage.x, originY: activeVillage.y, targetX: tX, targetY: tY, units, travelDurationMs: t, arrivesAt: Date.now() + t, returnsAt: 0, loot: { wood: 0, clay: 0, iron: 0 } }] };
+      return { ...p, worldMap: nMap, activeCommands: [...p.activeCommands, { id: Math.random().toString(36).substr(2, 9), type, status: 'marching', originX: activeVillage.x, originY: activeVillage.y, targetX: tX, targetY: tY, units, travelDurationMs: t, arrivesAt: Date.now() + t, returnsAt: 0, loot: { wood: 0, clay: 0, iron: 0, food: 0 } }] };
     });
   };
 
   const getTimeRemaining = (t: number) => Math.max(0, Math.floor((t - Date.now()) / 1000));
   const resetVillage = () => { localStorage.clear(); window.location.reload(); };
   const maxAllBuildings = () => updateWorldTile(activeVillage!.x, activeVillage!.y, { buildings: { ...MAX_LEVELS } });
-  const addResources = () => updateWorldTile(activeVillage!.x, activeVillage!.y, { resources: { wood: activeVillage!.resources!.wood + 100000, clay: activeVillage!.resources!.clay + 100000, iron: activeVillage!.resources!.iron + 100000 } });
+  const addResources = () => updateWorldTile(activeVillage!.x, activeVillage!.y, { resources: { wood: activeVillage!.resources!.wood + 100000, clay: activeVillage!.resources!.clay + 100000, iron: activeVillage!.resources!.iron + 100000, food: (activeVillage!.resources!.food || 0) + 100000 } });
   const renameVillage = (n: string) => n.trim() && updateWorldTile(activeVillage!.x, activeVillage!.y, { name: n.trim() });
   const addArmy = (a: Partial<Units>) => {
     const u = { ...activeVillage!.units };
