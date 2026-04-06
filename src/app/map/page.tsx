@@ -21,6 +21,7 @@ export default function WorldMap() {
   const [centerX, setCenterX] = useState(25);
   const [centerY, setCenterY] = useState(25);
   const [hoveredTile, setHoveredTile] = useState<MapTile | null>(null);
+  const mousePosRef = useRef({ x: 0, y: 0 });
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [activeVillage, setTargetVillage] = useState<MapTile | null>(null);
   const [sentUnits, setSentUnits] = useState<Partial<Units>>({});
@@ -37,7 +38,7 @@ export default function WorldMap() {
   const [containerSize, setContainerSize] = useState({ w: 1200, h: 800 });
 
   const tileSize = ZOOM_LEVELS[zoomIndex];
-  const gap = 2;
+  const gap = 0;
   const viewportW = Math.min(50, Math.ceil(containerSize.w / (tileSize + gap)) + 2);
   const viewportH = Math.min(50, Math.ceil(containerSize.h / (tileSize + gap)) + 2);
 
@@ -79,7 +80,7 @@ export default function WorldMap() {
       }
     };
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
+      mousePosRef.current = { x: e.clientX, y: e.clientY };
     };
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('mousemove', handleMouseMove);
@@ -280,7 +281,7 @@ export default function WorldMap() {
       {/* Map Viewport */}
       <div
         ref={containerRef}
-        className="flex-1 min-h-0 relative overflow-hidden"
+        className="flex-1 min-h-0 relative overflow-hidden select-none"
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMoveDrag}
@@ -292,13 +293,12 @@ export default function WorldMap() {
           <div className={`w-full h-full flex items-center justify-center transition-all duration-700 ${visualMode === 'tactical' ? 'rotate-x-[45deg] rotate-z-[-45deg] scale-[0.65]' : ''}`}>
             <MapNavArrows panMap={panMap} />
             <div
-              className={`grid gap-[1px] relative
+              className={`grid relative
                 ${visualMode === 'tactical' ? 'ring-1 ring-primary/20' : ''}
               `}
               style={{
                 gridTemplateColumns: `repeat(${viewportW}, ${tileSize}px)`,
                 gridTemplateRows: `repeat(${viewportH}, ${tileSize}px)`,
-                background: '#111316',
               }}
             >
               {/* Troop arrows overlay */}
@@ -337,7 +337,7 @@ export default function WorldMap() {
                   return (
                     <div
                       key={tile.id}
-                      onMouseEnter={() => { if (tile.type !== 'empty') setHoveredTile(tile); }}
+                      onMouseEnter={() => { if (tile.type !== 'empty') { setHoveredTile(tile); setMousePos(mousePosRef.current); } }}
                       onMouseLeave={() => setHoveredTile(null)}
                       onClick={() => {
                         if (hasDragged.current) return;
@@ -346,10 +346,9 @@ export default function WorldMap() {
                           setDispatchMode(null);
                         }
                       }}
-                      className={`relative cursor-pointer group transition-all duration-300 overflow-hidden
+                      className={`relative cursor-pointer group overflow-hidden
                         ${tile.type === 'empty' ? 'bg-surface-dim opacity-10' : 'hover:z-10 hover:ring-1 hover:ring-white/20'}
                         ${activeVillage?.id === tile.id ? 'ring-2 ring-primary shadow-[0_0_30px_rgba(255,198,62,0.2)] z-10' : ''}
-                        ${visualMode === 'tactical' && (tile.type === 'village' || tile.type === 'player') ? 'shadow-[0_0_15px_rgba(0,0,0,0.5)]' : ''}
                       `}
                     >
                       <TileVisual

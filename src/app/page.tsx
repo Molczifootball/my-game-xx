@@ -301,14 +301,6 @@ function MapNode({ id, x, y, activeVillage, MAX_LEVELS, isQueued, isLocked, onCl
       style={{ left: x, top: y }}
       onClick={onClick}
     >
-      {/* Pulsing ring indicator for active buildings */}
-      {!isZero && !isLocked && (
-        <div className={`absolute w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-all duration-300 pointer-events-none
-          ${level >= maxLevel ? 'border-primary/60 shadow-[0_0_12px_rgba(255,198,62,0.3)]' : 'border-white/20 group-hover:border-primary/50 group-hover:shadow-[0_0_15px_rgba(255,198,62,0.2)]'}
-          ${isQueued ? 'border-emerald-400/60 shadow-[0_0_12px_rgba(52,211,153,0.3)] animate-pulse' : ''}
-        `} />
-      )}
-
       {/* Locked overlay dot */}
       {isLocked && isZero && (
         <div className="w-8 h-8 rounded-full bg-black/70 border border-red-900/40 flex items-center justify-center mb-0.5">
