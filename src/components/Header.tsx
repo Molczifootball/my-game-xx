@@ -4,9 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useGame } from '@/context/GameContext';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function Header() {
   const { state, activeVillage, setActiveVillageId } = useGame();
+  const { data: session } = useSession();
   const [serverTime, setServerTime] = useState<Date>(new Date());
   const pathname = usePathname();
 
@@ -142,9 +144,10 @@ export default function Header() {
 
           <div className="flex items-center gap-2 text-[10px]">
             <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">
-              {state.playerName.charAt(0).toUpperCase()}
+              {(session?.user?.name || state.playerName).charAt(0).toUpperCase()}
             </div>
-            <span className="text-gray-300 font-bold hidden lg:inline">{state.playerName}</span>
+            <span className="text-gray-300 font-bold hidden lg:inline">{session?.user?.name || state.playerName}</span>
+            <button onClick={() => signOut({ callbackUrl: '/login' })} className="text-[8px] text-gray-500 hover:text-red-400 transition-colors ml-1" title="Sign out">⏻</button>
           </div>
         </div>
       </div>

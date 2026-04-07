@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { calculatePoints } from "@/utils/shared";
 import { getTerrainType } from "@/utils/mapUtils";
 
@@ -310,6 +311,7 @@ const GameContext = createContext<GameContextType | undefined>(undefined);
 export const getProductionRate = (lvl: number) => lvl === 0 ? 0 : 30 * Math.pow(1.15, lvl - 1);
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { data: session } = useSession();
   const [state, setState] = useState<GameState>(initialGameState);
   const [mounted, setMounted] = useState(false);
 
@@ -349,8 +351,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error("Failed to load from localStorage:", e);
         }
       }
-      // Generate new world
-      setState({ ...initialGameState, worldMap: generateWorldMap(), lastTick: Date.now() });
+      // Generate new world with player name from session
+      const playerName = session?.user?.name || 'Player_1';
+      setState({ ...initialGameState, playerName, worldMap: generateWorldMap(), lastTick: Date.now() });
       setMounted(true);
     };
     loadState();
