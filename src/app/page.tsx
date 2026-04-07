@@ -60,7 +60,7 @@ export default function Home() {
     const costWood = Math.floor((isSpecial ? 200 : 100) * costMultiplier);
     const costClay = Math.floor((isSpecial ? 200 : 100) * costMultiplier);
     const costIron = Math.floor((isSpecial ? 200 : 100) * costMultiplier);
-    const timeSecs = Math.floor((isSpecial ? 20 : 10) * Math.pow(1.15, targetLevel - 1));
+    const timeSecs = Math.floor((isSpecial ? 120 : 60) * Math.pow(1.2, targetLevel - 1));
 
     const reqs = BUILDING_REQUIREMENTS[selectedBuilding];
     const unmetReqs = reqs.filter(r => (vBuildings[r.requires] || 0) < r.level);

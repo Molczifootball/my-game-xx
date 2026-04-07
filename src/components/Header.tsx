@@ -46,8 +46,32 @@ export default function Header() {
         {/* Left: Logo + Nav */}
         <div className="flex items-center gap-1 lg:gap-2">
           {/* Logo */}
-          <Link href="/" className="text-primary font-bold medieval-font text-base tracking-widest shrink-0 mr-2 lg:mr-3 hover:brightness-110 transition-all py-1.5">
-            TW
+          <Link href="/" className="group flex items-center gap-3 hover:brightness-110 transition-all py-1">
+            {/* The Banner: Lechitic Shield with Eagle */}
+            <div className="relative w-9 h-10 flex items-center justify-center">
+              {/* Shield Shape */}
+              <div 
+                className="absolute inset-0 bg-red-800 border-2 border-primary shadow-[0_4px_10px_rgba(0,0,0,0.5)]"
+                style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 70%, 50% 100%, 0% 70%)' }}
+              ></div>
+              {/* Eagle Icon */}
+              <span className="relative z-10 text-xl filter drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)] select-none translate-y-[-2px]">
+                🦅
+              </span>
+            </div>
+            
+            {/* The Wordmark */}
+            <div className="flex flex-col leading-none">
+              <span className="text-primary font-bold medieval-font text-lg tracking-[0.18em] uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                Lechia
+              </span>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="text-[7px] text-primary/40 font-bold tracking-[0.4em] uppercase">
+                  Online
+                </span>
+                <span className="w-10 h-px bg-primary/20"></span>
+              </div>
+            </div>
           </Link>
 
           {/* Navigation */}

@@ -11,8 +11,8 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const noto = Noto_Serif({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-noto' });
 
 export const metadata: Metadata = {
-  title: 'Tribal Wars Clone - Next.js',
-  description: 'A modern strategy web game built with Next.js',
+  title: 'Lechia Online',
+  description: 'The definitive medieval strategy MMO',
 };
 
 export default function RootLayout({
@@ -28,6 +28,7 @@ export default function RootLayout({
             <Header />
             <ResourceBar />
           </div>
+
           <main className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden w-full relative">
             <SidebarLeft />
             <section className="flex-1 min-h-0 relative overflow-hidden flex flex-col">

@@ -76,12 +76,12 @@ export const getFoodUpkeep = (units: Partial<Units>): { grain: number; fish: num
 
 /** Food production per hour based on building level */
 export const getGrainProduction = (farmLevel: number): number => farmLevel === 0 ? 0 : 50 * Math.pow(1.15, farmLevel - 1);
-export const getMeatProduction = (lodgeLevel: number): number => lodgeLevel === 0 ? 0 : 30 * Math.pow(1.15, lodgeLevel - 1);
-export const getFishProduction = (fisheryLevel: number): number => fisheryLevel === 0 ? 0 : 40 * Math.pow(1.15, fisheryLevel - 1);
+export const getMeatProduction = (lodgeLevel: number): number => lodgeLevel === 0 ? 0 : 60 * Math.pow(1.15, lodgeLevel - 1);
+export const getFishProduction = (fisheryLevel: number): number => fisheryLevel === 0 ? 0 : 60 * Math.pow(1.15, fisheryLevel - 1);
 /** Granary capacity */
 export const getGranaryCapacity = (granaryLevel: number): number => granaryLevel === 0 ? 500 : Math.floor(3000 * Math.pow(1.3, granaryLevel - 1));
 /** Residence max population */
-export const getMaxPopulation = (residenceLevel: number): number => residenceLevel === 0 ? 10 : Math.floor(20 * Math.pow(1.25, residenceLevel - 1));
+export const getMaxPopulation = (residenceLevel: number): number => residenceLevel === 0 ? 10 : Math.floor(25 * Math.pow(1.22, residenceLevel - 1));
 /** Current population used by units (+ units in training queue) */
 export const getCurrentPopulation = (units: Partial<Units>, recruitment?: { unit: keyof Units }[]): number => {
   let pop = 0;
@@ -200,7 +200,7 @@ interface GameContextType {
 }
 
 const MAX_LEVELS: Record<keyof Buildings, number> = {
-  headquarters: 20, timberCamp: 30, clayPit: 30, ironMine: 30, warehouse: 20, granary: 20, cityWall: 20, barracks: 25, stable: 20, castle: 1, palace: 1, farm: 30, huntersLodge: 20, fishery: 20, residence: 25,
+  headquarters: 20, timberCamp: 30, clayPit: 30, ironMine: 30, warehouse: 20, granary: 25, cityWall: 20, barracks: 25, stable: 20, castle: 1, palace: 1, farm: 25, huntersLodge: 25, fishery: 25, residence: 25,
 };
 
 // Building prerequisites: { building: [{ requires: building, level: minLevel }] }
@@ -287,7 +287,7 @@ const generateWorldMap = (): MapTile[] => {
 
       map.push({
         id: `${x + 1}|${y + 1}`, x: x + 1, y: y + 1, type,
-        name: isBarbarian ? 'Barbarian Outpost' : isPlayer ? 'Capital Village' : undefined,
+        name: isBarbarian ? 'Wilderlands Outpost' : isPlayer ? 'Lechitic Capital' : undefined,
         points: (isBarbarian || isPlayer) ? calculatePoints(b!) : undefined,
         owner: isBarbarian ? 'Barbarian' : isPlayer ? 'Player_1' : undefined,
         buildings: b, resources: r, units: u, upgrades: up, recruitment: rec,
@@ -633,7 +633,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const mult = Math.pow(1.2, lvl - 1); const sp = ['castle','barracks','cityWall','stable','palace'].includes(b);
     const cost = { wood: (sp ? 200 : 100) * mult, clay: (sp ? 200 : 100) * mult, iron: (sp ? 200 : 100) * mult };
     if (activeVillage.resources!.wood >= cost.wood && activeVillage.resources!.clay >= cost.clay && activeVillage.resources!.iron >= cost.iron) {
-      const t = (sp ? 20 : 10) * Math.pow(1.15, lvl - 1);
+      const t = (sp ? 120 : 60) * Math.pow(1.2, lvl - 1);
       const s = activeVillage.upgrades!.length > 0 ? activeVillage.upgrades![activeVillage.upgrades!.length - 1].completesAt : Date.now();
       updateWorldTile(activeVillage.x, activeVillage.y, { 
         resources: { ...activeVillage.resources!, wood: activeVillage.resources!.wood - cost.wood, clay: activeVillage.resources!.clay - cost.clay, iron: activeVillage.resources!.iron - cost.iron },
