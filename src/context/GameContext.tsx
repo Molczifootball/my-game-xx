@@ -322,27 +322,56 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [state.worldMap, state.playerName]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("tribalWarsCloneState");
-    if (saved) {
+    // Try loading from database first, fallback to localStorage, then generate new
+    const loadState = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        // Robust check for existing world map data
-        if (parsed.worldMap && Array.isArray(parsed.worldMap) && parsed.worldMap.length > 0) {
-           setState({ ...parsed, lastTick: Date.now() });
-        } else {
-           setState({ ...initialGameState, worldMap: generateWorldMap(), lastTick: Date.now() });
+        const res = await fetch('/api/game');
+        const data = await res.json();
+        if (data.state && data.state.worldMap && data.state.worldMap.length > 0) {
+          setState({ ...data.state, lastTick: Date.now() });
+          setMounted(true);
+          return;
         }
-      } catch (e) { 
-        console.error("Failed to load map state:", e);
-        setState({ ...initialGameState, worldMap: generateWorldMap(), lastTick: Date.now() }); 
+      } catch (e) {
+        console.warn("DB load failed, trying localStorage:", e);
       }
-    } else {
+      // Fallback to localStorage
+      const saved = localStorage.getItem("tribalWarsCloneState");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.worldMap && Array.isArray(parsed.worldMap) && parsed.worldMap.length > 0) {
+            setState({ ...parsed, lastTick: Date.now() });
+            setMounted(true);
+            return;
+          }
+        } catch (e) {
+          console.error("Failed to load from localStorage:", e);
+        }
+      }
+      // Generate new world
       setState({ ...initialGameState, worldMap: generateWorldMap(), lastTick: Date.now() });
-    }
-    setMounted(true);
+      setMounted(true);
+    };
+    loadState();
   }, []);
 
-  useEffect(() => { if (mounted) localStorage.setItem("tribalWarsCloneState", JSON.stringify(state)); }, [state, mounted]);
+  // Save to localStorage immediately, and debounce save to DB
+  const saveTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    if (!mounted) return;
+    // Always save to localStorage (instant)
+    localStorage.setItem("tribalWarsCloneState", JSON.stringify(state));
+    // Debounce DB save (every 5 seconds)
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      fetch('/api/game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state, playerName: state.playerName }),
+      }).catch(e => console.warn('DB save failed:', e));
+    }, 5000);
+  }, [state, mounted]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -699,7 +728,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const getTimeRemaining = (t: number) => Math.max(0, Math.floor((t - Date.now()) / 1000));
-  const resetVillage = () => { localStorage.clear(); window.location.reload(); };
+  const resetVillage = () => { localStorage.clear(); fetch('/api/game', { method: 'DELETE' }).finally(() => window.location.reload()); };
   const maxAllBuildings = () => updateWorldTile(activeVillage!.x, activeVillage!.y, { buildings: { ...MAX_LEVELS } });
   const addResources = () => { const r = activeVillage!.resources!; updateWorldTile(activeVillage!.x, activeVillage!.y, { resources: { wood: r.wood + 100000, clay: r.clay + 100000, iron: r.iron + 100000, grain: (r.grain || 0) + 100000, meat: (r.meat || 0) + 100000, fish: (r.fish || 0) + 100000 } }); };
   const renameVillage = (n: string) => n.trim() && updateWorldTile(activeVillage!.x, activeVillage!.y, { name: n.trim() });
