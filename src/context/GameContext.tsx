@@ -324,21 +324,26 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [state.worldMap, state.playerName]);
 
   useEffect(() => {
-    // Try loading from database first, fallback to localStorage, then generate new
+    if (!session?.user?.id) return; // Wait for session
+    const userId = session.user.id;
+    const lsKey = `gameState_${userId}`;
+
     const loadState = async () => {
+      // Try loading from database first
       try {
         const res = await fetch('/api/game');
         const data = await res.json();
         if (data.state && data.state.worldMap && data.state.worldMap.length > 0) {
           setState({ ...data.state, lastTick: Date.now() });
+          localStorage.setItem(lsKey, JSON.stringify(data.state));
           setMounted(true);
           return;
         }
       } catch (e) {
         console.warn("DB load failed, trying localStorage:", e);
       }
-      // Fallback to localStorage
-      const saved = localStorage.getItem("tribalWarsCloneState");
+      // Fallback to per-user localStorage
+      const saved = localStorage.getItem(lsKey);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -351,20 +356,29 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error("Failed to load from localStorage:", e);
         }
       }
-      // Generate new world with player name from session
-      const playerName = session?.user?.name || 'Player_1';
-      setState({ ...initialGameState, playerName, worldMap: generateWorldMap(), lastTick: Date.now() });
+      // Generate new world for this player
+      const playerName = session.user.name || 'Player_1';
+      const newState = { ...initialGameState, playerName, worldMap: generateWorldMap(), lastTick: Date.now() };
+      setState(newState);
+      // Save immediately to DB
+      fetch('/api/game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state: newState, playerName }),
+      }).catch(e => console.warn('Initial DB save failed:', e));
       setMounted(true);
     };
+    setMounted(false); // Reset when user changes
     loadState();
-  }, []);
+  }, [session?.user?.id]);
 
-  // Save to localStorage immediately, and debounce save to DB
+  // Save to per-user localStorage immediately, and debounce save to DB
   const saveTimerRef = React.useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    if (!mounted) return;
-    // Always save to localStorage (instant)
-    localStorage.setItem("tribalWarsCloneState", JSON.stringify(state));
+    if (!mounted || !session?.user?.id) return;
+    const lsKey = `gameState_${session.user.id}`;
+    // Always save to per-user localStorage (instant)
+    localStorage.setItem(lsKey, JSON.stringify(state));
     // Debounce DB save (every 5 seconds)
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
@@ -374,7 +388,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({ state, playerName: state.playerName }),
       }).catch(e => console.warn('DB save failed:', e));
     }, 5000);
-  }, [state, mounted]);
+  }, [state, mounted, session?.user?.id]);
 
   useEffect(() => {
     if (!mounted) return;
