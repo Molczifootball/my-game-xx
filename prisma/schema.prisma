@@ -6,6 +6,7 @@ datasource db {
   provider = "postgresql"
 }
 
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -18,6 +19,8 @@ model User {
   accounts      Account[]
   sessions      Session[]
   gameSave      GameSave?
+  villages      WorldTile[] @relation("PlayerVillages")
+  commands      CombatCommand[] @relation("PlayerCommands")
 }
 
 model Account {
@@ -54,6 +57,7 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+// Existing user save (backup/legacy)
 model GameSave {
   id         String   @id @default(cuid())
   userId     String   @unique
@@ -62,4 +66,44 @@ model GameSave {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// NEW: Global shared World Map
+model WorldTile {
+  id          String   @id @default(cuid())
+  x           Int
+  y           Int
+  type        String   // empty, grass, village, player, forest, water, mountain
+  ownerId     String?
+  ownerName   String?
+  name        String?
+  buildings   Json?
+  resources   Json?
+  units       Json?
+  endorsement Int?     @default(100)
+  scoutedAt   DateTime?
+  lastAttackAt DateTime?
+  updatedAt   DateTime @updatedAt
+  user        User?    @relation("PlayerVillages", fields: [ownerId], references: [id])
+
+  @@unique([x, y])
+}
+
+// NEW: Global shared troop movements
+model CombatCommand {
+  id               String   @id @default(cuid())
+  type             String   // attack, scout
+  status           String   // marching, returning
+  originX          Int
+  originY          Int
+  targetX          Int
+  targetY          Int
+  units            Json
+  loot             Json?
+  arrivesAt        DateTime
+  returnsAt        DateTime?
+  ownerId          String
+  targetOwnerId    String?
+  createdAt        DateTime @default(now())
+  user             User     @relation("PlayerCommands", fields: [ownerId], references: [id])
 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { useGame, BattleReport, Units, Buildings, UNIT_ATLAS } from '@/context/GameContext';
+import { useGame, BattleReport } from '@/context/GameContext';
 import { useState, useMemo } from 'react';
-import { UNIT_EMOJIS, BUILDING_META } from '@/utils/shared';
+import { UNIT_EMOJIS, BUILDING_META, Units, Buildings, UNIT_ATLAS } from '@/utils/shared';
 
 const UNIT_KEYS: (keyof Units)[] = [
   'pikeman', 'swordman', 'axeman', 'archer', 'scout',

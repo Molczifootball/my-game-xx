@@ -1,6 +1,7 @@
 "use client";
 
 import { useGame } from '@/context/GameContext';
+import { Buildings } from '@/utils/shared';
 import Link from 'next/link';
 
 export default function DevTools() {
@@ -16,7 +17,7 @@ export default function DevTools() {
 
   const handleGodModeLocal = () => {
     updateWorldTile(26, 22, {
-      buildings: { ...MAX_LEVELS },
+      buildings: MAX_LEVELS as Buildings,
       units: { pikeman: 100, swordman: 100 },
     });
   };
@@ -26,7 +27,7 @@ export default function DevTools() {
       type: 'village',
       name,
       owner: 'Barbarian',
-      buildings: { ...MAX_LEVELS },
+      buildings: MAX_LEVELS as Buildings,
       units: { pikeman: 200, swordman: 200, axeman: 150, archer: 100, scout: 50, lightCavalry: 100, heavyCavalry: 50, horseArcher: 50, knight: 1, nobleman: 0 },
       resources: { wood: 50000, clay: 50000, iron: 50000, grain: 50000, meat: 50000, fish: 50000 },
       endorsement: 100,

@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { useGame, MapTile, UNIT_ATLAS, Units, Resources } from '@/context/GameContext';
-import { calculatePoints, calculateDistance, calculateTravelDuration, UNIT_EMOJIS, BUILDING_META } from '@/utils/shared';
+import { useGame, MapTile } from '@/context/GameContext';
+import { 
+  calculatePoints, calculateDistance, calculateTravelDuration, 
+  UNIT_EMOJIS, BUILDING_META, UNIT_ATLAS, Units, Resources 
+} from '@/utils/shared';
 import { buildTileIndex } from '@/utils/mapUtils';
 import TileVisual from '@/components/map/TileVisual';
 import TroopArrows from '@/components/map/TroopArrows';

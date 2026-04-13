@@ -2,8 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { Buildings } from '@/context/GameContext';
-import { BUILDING_META } from '@/utils/shared';
+import { Buildings, BUILDING_META } from '@/utils/shared';
 import Link from 'next/link';
 
 const BUILDING_ORDER: (keyof Buildings)[] = [

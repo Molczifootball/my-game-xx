@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useGame, Units, BattleReport, UNIT_ATLAS, Buildings, getMaxPopulation, getCurrentPopulation } from '@/context/GameContext';
-import { formatTime, UNIT_EMOJIS, BUILDING_META } from '@/utils/shared';
+import { useGame, BattleReport } from '@/context/GameContext';
+import { Units, UNIT_ATLAS, Buildings, getMaxPopulation, getCurrentPopulation, formatTime, UNIT_EMOJIS, BUILDING_META } from '@/utils/shared';
 import Link from 'next/link';
 
 export default function SidebarRight() {

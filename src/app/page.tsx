@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useGame, Buildings, getProductionRate, UNIT_ATLAS, Units, BUILDING_REQUIREMENTS, getMaxPopulation, getCurrentPopulation } from '@/context/GameContext';
-import { BUILDING_META, formatTime } from '@/utils/shared';
+import { useGame } from '@/context/GameContext';
+import { 
+  Buildings, getProductionRate, UNIT_ATLAS, Units, BUILDING_REQUIREMENTS, 
+  getMaxPopulation, getCurrentPopulation, BUILDING_META, formatTime 
+} from '@/utils/shared';
 
 const BUILDING_ORDER: (keyof Buildings)[] = ['headquarters', 'barracks', 'stable', 'castle', 'palace', 'cityWall', 'timberCamp', 'ironMine', 'clayPit', 'warehouse', 'farm', 'granary', 'huntersLodge', 'fishery', 'residence'];
 
@@ -54,7 +57,7 @@ export default function Home() {
     
     const queuedForBuilding = vUpgrades.filter(u => u.building === selectedBuilding).length;
     const targetLevel = level + queuedForBuilding + 1;
-    const isSpecial = ['castle','barracks','cityWall','palace','stable'].includes(selectedBuilding);
+    const isSpecial = ['castle','barracks','cityWall','palace','stable'].includes(selectedBuilding as string);
     const costMultiplier = Math.pow(1.2, targetLevel - 1);
     
     const costWood = Math.floor((isSpecial ? 200 : 100) * costMultiplier);
@@ -170,7 +173,7 @@ export default function Home() {
               )}
             </div>
 
-            {['barracks','stable','castle','palace'].includes(selectedBuilding) && level > 0 && (() => {
+            {['barracks','stable','castle','palace'].includes(selectedBuilding as string) && level > 0 && (() => {
               const currentPop = getCurrentPopulation(vUnits, activeVillage.recruitment);
               const maxPop = getMaxPopulation(vBuildings.residence || 0);
               return (

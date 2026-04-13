@@ -1,6 +1,10 @@
 "use client";
 
-import { useGame, getProductionRate, getGrainProduction, getMeatProduction, getFishProduction, getFoodUpkeep, getGranaryCapacity, getMaxPopulation, getCurrentPopulation } from '@/context/GameContext';
+import { useGame } from '@/context/GameContext';
+import { 
+  getProductionRate, getGrainProduction, getMeatProduction, getFishProduction, 
+  getFoodUpkeep, getGranaryCapacity, getMaxPopulation, getCurrentPopulation 
+} from '@/utils/shared';
 import { useEffect, useState } from 'react';
 
 export default function ResourceBar() {

@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useEffect, useCallback } from 'react';
-import { GameState, ActiveCommand, UNIT_ATLAS, Units } from '@/context/GameContext';
+import { GameState, ActiveCommand } from '@/context/GameContext';
+import { UNIT_ATLAS, Units } from '@/utils/shared';
 
 interface TroopArrowsProps {
   state: GameState;
@@ -95,9 +96,9 @@ export default function TroopArrows({ state, minX, minY, tileSize, viewportW, vi
         const pxX = toPixel(curX, v.minX, v.tileSize);
         const pxY = toPixel(curY, v.minY, v.tileSize);
 
-        const unitCount = Object.values(cmd.units).reduce((a, c) => a + ((c as number) || 0), 0);
+        const unitCount = Object.values(cmd.units).reduce((a: number, c) => a + ((c as number) || 0), 0);
         const isReturning = cmd.status === 'returning';
-        const hasLoot = isReturning && Object.values(cmd.loot).some(val => (val as number) > 0);
+        const hasLoot = isReturning && Object.values(cmd.loot || {}).some(val => (val as number) > 0);
         const strokeColor = cmd.type === 'attack' ? '#00f2ff' : '#fbbf24';
         const strokeWidth = v.visualMode === 'tactical' ? 3 : 2;
         const icon = hasLoot ? '💰' : (cmd.type === 'attack' ? '⚔️' : '🕵️');

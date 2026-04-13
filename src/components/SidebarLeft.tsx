@@ -1,7 +1,11 @@
 "use client";
 
-import { useGame, getProductionRate, getGrainProduction, getMeatProduction, getFishProduction, getFoodUpkeep, getGranaryCapacity, getMaxPopulation, getCurrentPopulation, Units, UNIT_ATLAS, Buildings } from '@/context/GameContext';
-import { formatTime, BUILDING_META, calculatePoints, UNIT_EMOJIS } from '@/utils/shared';
+import { useGame } from '@/context/GameContext';
+import { 
+  getProductionRate, getGrainProduction, getMeatProduction, getFishProduction, 
+  getFoodUpkeep, getGranaryCapacity, getMaxPopulation, getCurrentPopulation, 
+  Units, UNIT_ATLAS, Buildings, formatTime, BUILDING_META, calculatePoints, UNIT_EMOJIS 
+} from '@/utils/shared';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
