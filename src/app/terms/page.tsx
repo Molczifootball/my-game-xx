@@ -12,19 +12,12 @@ export default function TermsPage() {
     }}>
       <div className="max-w-3xl w-full glass-panel border border-outline-variant p-6 md:p-10 rounded-xl space-y-6">
         <div className="mb-8 border-b border-outline-variant pb-6">
-          <div className="flex justify-between items-center gap-4">
-            <div className="flex items-center gap-4">
-              <img 
-                src="/images/malachite_logo.png" 
-                alt="Malachite Logo" 
-                className="w-12 h-12 object-contain"
-              />
-              <div>
-                <h1 className="text-2xl md:text-3xl text-primary font-bold medieval-font tracking-[0.2em] uppercase">Terms of Service</h1>
-                <p className="text-gray-500 text-[10px] mt-1 font-mono uppercase tracking-widest">Effective Date: April 13, 2026</p>
-              </div>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-2xl md:text-3xl text-primary font-bold medieval-font tracking-[0.2em] uppercase">Terms of Service</h1>
+              <p className="text-gray-500 text-[10px] mt-2 font-mono uppercase tracking-widest">Effective Date: April 13, 2026</p>
             </div>
-            <div className="hidden md:block text-right">
+            <div className="text-right">
               <span className="text-[10px] text-primary/40 font-mono uppercase tracking-widest border border-primary/20 px-2 py-1 rounded">Malachite Software</span>
             </div>
           </div>

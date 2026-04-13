@@ -63,11 +63,6 @@ export default function RegisterPage() {
     }}>
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img 
-            src="/images/malachite_logo.png" 
-            alt="Malachite Software Logo" 
-            className="w-16 h-16 mx-auto mb-4 object-contain brightness-110 drop-shadow-[0_0_10px_rgba(45,160,140,0.3)]"
-          />
           <h1 className="text-3xl text-primary font-bold medieval-font tracking-widest mb-2">Lechia Online</h1>
           <p className="text-gray-500 text-xs uppercase tracking-widest">Forge Your Dynasty</p>
         </div>
