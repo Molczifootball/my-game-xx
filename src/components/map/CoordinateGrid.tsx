@@ -33,13 +33,14 @@ export default function CoordinateGrid({ viewportW, viewportH, minX, minY, tileS
         <text
           key={i}
           x={l.x}
-          y={l.y}
-          textAnchor={l.isRow ? 'end' : 'middle'}
+          y={l.y < 0 ? 10 : l.y} // Prevent clipping above viewport
+          textAnchor={l.isRow ? 'start' : 'middle'} // Shift row labels inside
           dominantBaseline={l.isRow ? 'middle' : 'auto'}
-          fill="rgba(0, 0, 0, 0.5)"
-          fontSize="8"
+          fill="rgba(255, 255, 255, 0.6)"
+          fontSize="10"
           fontFamily="monospace"
           fontWeight="bold"
+          style={{ textShadow: '1px 1px 2px black' }}
         >
           {l.label}
         </text>
@@ -55,7 +56,7 @@ export default function CoordinateGrid({ viewportW, viewportH, minX, minY, tileS
             key={`v-${c}`}
             x1={px} y1={0}
             x2={px} y2={viewportH * tileSize}
-            stroke="rgba(0, 0, 0, 0.25)"
+            stroke="rgba(255, 255, 255, 0.15)"
             strokeWidth="1"
             strokeDasharray="4 4"
           />
@@ -72,7 +73,7 @@ export default function CoordinateGrid({ viewportW, viewportH, minX, minY, tileS
             key={`h-${r}`}
             x1={0} y1={py}
             x2={viewportW * tileSize} y2={py}
-            stroke="rgba(0, 0, 0, 0.25)"
+            stroke="rgba(255, 255, 255, 0.15)"
             strokeWidth="1"
             strokeDasharray="4 4"
           />

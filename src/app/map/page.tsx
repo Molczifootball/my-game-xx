@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useGame, MapTile } from '@/context/GameContext';
 import { 
   calculatePoints, calculateDistance, calculateTravelDuration, 
@@ -18,6 +19,7 @@ const DEFAULT_ZOOM = 3; // 48px
 
 export default function WorldMap() {
   const { state, activeVillage: currentActive, setActiveVillageId, dispatchArmy, setMapSettings } = useGame();
+  const searchParams = useSearchParams();
   const visualMode = state.mapSettings?.visualMode || 'classic';
   const showGrid = state.mapSettings?.showGrid ?? false;
 
@@ -45,13 +47,18 @@ export default function WorldMap() {
   const viewportW = Math.min(50, Math.ceil(containerSize.w / (tileSize + gap)) + 2);
   const viewportH = Math.min(50, Math.ceil(containerSize.h / (tileSize + gap)) + 2);
 
-  // Sync center with current active village on first load
+  // Sync center with URL params or current active village on first load
   useEffect(() => {
-    if (currentActive) {
+    const qx = searchParams.get('x');
+    const qy = searchParams.get('y');
+    if (qx && qy) {
+      setCenterX(Math.max(1, Math.min(50, parseInt(qx, 10))));
+      setCenterY(Math.max(1, Math.min(50, parseInt(qy, 10))));
+    } else if (currentActive) {
       setCenterX(currentActive.x);
       setCenterY(currentActive.y);
     }
-  }, []);
+  }, [currentActive, searchParams]);
 
   // ResizeObserver for dynamic viewport
   useEffect(() => {
@@ -259,17 +266,6 @@ export default function WorldMap() {
             `}
           >
             # Grid
-          </button>
-
-          <button
-            onClick={() => setMapSettings({ ...state.mapSettings, visualMode: visualMode === 'classic' ? 'tactical' : 'classic' })}
-            className={`text-[10px] px-3 py-1.5 rounded transition-all font-bold uppercase tracking-widest border flex items-center gap-2 active:scale-95 shadow-lg
-              ${visualMode === 'tactical'
-                ? 'bg-primary text-on-primary border-primary hover:brightness-110'
-                : 'bg-surface-highest text-primary border-primary/30 hover:bg-primary/10'}
-            `}
-          >
-            {visualMode === 'tactical' ? '✨ Tactical' : '📜 Classic'}
           </button>
 
           <button

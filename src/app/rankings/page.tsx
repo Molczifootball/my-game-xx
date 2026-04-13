@@ -61,7 +61,7 @@ export default function RankingsPage() {
   };
 
   const handleNavigate = (x: number, y: number) => {
-    router.push('/map');
+    router.push(`/map?x=${x}&y=${y}`);
   };
 
   return (
@@ -146,7 +146,7 @@ export default function RankingsPage() {
         ) : (
           <div className="px-6 py-1">
             {filtered.map((entry) => {
-              const rank = playerRankings.indexOf(entry) + 1;
+              const rank = leaderboard.indexOf(entry) + 1;
               return (
                 <div
                   key={entry.owner}
