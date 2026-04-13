@@ -55,3 +55,32 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
+export async function POST(req: NextRequest) {
+  try {
+    const prisma = getPrisma();
+    const session = await nextAuth();
+    if (!session?.user?.id) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+
+    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+    if (!user?.isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized. Admins only.' }, { status: 403 });
+    }
+
+    const { action, bugId } = await req.json();
+    if (!bugId) return NextResponse.json({ error: 'Bug ID is required' }, { status: 400 });
+
+    if (action === 'delete') {
+      await prisma.bugReport.delete({ where: { id: bugId } });
+    } else if (action === 'markDone') {
+      await prisma.bugReport.update({ where: { id: bugId }, data: { status: 'done' } });
+    } else {
+      return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Admin POST API ERROR:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}

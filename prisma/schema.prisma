@@ -132,6 +132,7 @@ model BugReport {
   reporterId   String?
   reporterName String?
   createdAt    DateTime @default(now())
+  status       String   @default("open") // open, done
   user         User?    @relation(fields: [reporterId], references: [id])
 }
 

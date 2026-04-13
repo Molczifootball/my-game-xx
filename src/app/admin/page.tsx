@@ -24,6 +24,7 @@ interface AdminData {
     page: string | null;
     reporterName: string | null;
     createdAt: string;
+    status: string;
   }>;
 }
 
@@ -34,23 +35,40 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const fetchAdminData = () => {
+    fetch('/api/admin')
+      .then(res => {
+        if (!res.ok) throw new Error('Unauthorized');
+        return res.json();
+      })
+      .then(resData => {
+        if (resData.error) throw new Error(resData.error);
+        setData(resData);
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  };
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/');
     } else if (status === 'authenticated') {
-      fetch('/api/admin')
-        .then(res => {
-          if (!res.ok) throw new Error('Unauthorized');
-          return res.json();
-        })
-        .then(resData => {
-          if (resData.error) throw new Error(resData.error);
-          setData(resData);
-        })
-        .catch(err => setError(err.message))
-        .finally(() => setLoading(false));
+      fetchAdminData();
     }
   }, [status, router]);
+
+  const handleBugAction = async (bugId: string, action: 'markDone' | 'delete') => {
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bugId, action })
+      });
+      if (res.ok) fetchAdminData();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   if (loading) return <div className="min-h-screen bg-[#0E1111] flex items-center justify-center text-primary font-mono tracking-widest animate-pulse">AUTHORIZING...</div>;
   if (error) return <div className="min-h-screen bg-[#0E1111] flex flex-col items-center justify-center text-red-500 font-mono tracking-widest gap-4"><div>ACCESS DENIED</div><Link href="/" className="px-4 py-2 bg-surface text-gray-300 border border-outline-variant hover:border-primary">RETURN TO GAME</Link></div>;
@@ -120,18 +138,39 @@ export default function AdminDashboard() {
                   No bugs reported. The realm is flawless.
                 </div>
               ) : data.bugs.map(bug => (
-                <div key={bug.id} className="bg-surface border border-outline-variant rounded-lg p-4 flex flex-col gap-2">
+                <div key={bug.id} className={`border rounded-lg p-4 flex flex-col gap-2 transition-all ${
+                  bug.status === 'done' ? 'bg-surface-highest/50 border-green-900/50 opacity-60' : 'bg-surface border-outline-variant'
+                }`}>
                   <div className="flex justify-between items-start gap-4">
-                    <p className="text-sm text-gray-200 whitespace-pre-wrap">{bug.description}</p>
-                    {bug.page && (
-                      <span className="shrink-0 px-2 py-1 bg-surface-highest text-primary border border-primary/20 rounded font-mono text-[9px] uppercase">
-                        {bug.page.replace('/', ' / ')}
-                      </span>
-                    )}
+                    <p className={`text-sm whitespace-pre-wrap ${bug.status === 'done' ? 'text-gray-500 line-through' : 'text-gray-200'}`}>
+                      {bug.description}
+                    </p>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      {bug.page && (
+                        <span className="px-2 py-1 bg-surface-highest text-primary border border-primary/20 rounded font-mono text-[9px] uppercase">
+                          {bug.page.replace('/', ' / ')}
+                        </span>
+                      )}
+                      {bug.status === 'done' && (
+                        <span className="text-[9px] font-bold text-green-500 uppercase tracking-widest bg-green-500/10 px-2 py-0.5 rounded">Resolved</span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center justify-between text-[10px] font-mono mt-2 pt-2 border-t border-outline-variant/30">
-                    <span className="text-gray-400">Reported by: <span className="font-bold text-amber-500">{bug.reporterName || 'Unknown'}</span></span>
-                    <span className="text-gray-600">{new Date(bug.createdAt).toLocaleString()}</span>
+                    <span className="text-gray-500 flex items-center gap-1.5">
+                      <span className="font-bold text-amber-500/70">{bug.reporterName || 'Unknown'}</span>
+                      <span className="opacity-50">• {new Date(bug.createdAt).toLocaleString()}</span>
+                    </span>
+                    <div className="flex gap-2 items-center">
+                      {bug.status !== 'done' && (
+                        <button onClick={() => handleBugAction(bug.id, 'markDone')} className="text-green-500 hover:text-green-400 hover:underline">
+                          Mark Resolved
+                        </button>
+                      )}
+                      <button onClick={() => handleBugAction(bug.id, 'delete')} className="text-red-500 hover:text-red-400 hover:underline">
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
