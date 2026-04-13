@@ -249,7 +249,17 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ...prev,
           playerName: data.playerName,
           activeVillageId: data.activeVillageId,
-          activeCommands: data.commands || [],
+          activeCommands: (data.commands || []).map((cmd: any) => {
+            const arrivesAt = new Date(cmd.arrivesAt).getTime();
+            const returnsAt = new Date(cmd.returnsAt).getTime();
+            return {
+              ...cmd,
+              arrivesAt,
+              returnsAt,
+              travelDurationMs: returnsAt - arrivesAt,
+              loot: cmd.loot || { wood: 0, clay: 0, iron: 0, grain: 0, meat: 0, fish: 0 },
+            };
+          }),
           worldMap,
           lastTick: Date.now()
         }));

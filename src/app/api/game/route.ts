@@ -148,12 +148,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Build queue full (max 3)' }, { status: 400 });
       }
 
-      // Already building this same building? Reject
-      if (state.upgrades.some(u => u.building === building)) {
-        return NextResponse.json({ error: 'Already upgrading this building' }, { status: 400 });
-      }
-
-      const currentLevel = state.buildings[building as keyof Buildings] || 0;
+      // Calculate virtual level based on actual level + queued upgrades of this type
+      const queuedCount = state.upgrades.filter(u => u.building === building).length;
+      const currentLevel = (state.buildings[building as keyof Buildings] || 0) + queuedCount;
       const maxLvl = MAX_LEVELS[building as keyof Buildings];
       if (currentLevel >= maxLvl) {
         return NextResponse.json({ error: 'Already at max level' }, { status: 400 });
@@ -168,9 +165,13 @@ export async function POST(req: NextRequest) {
       // Build duration (HQ reduces time)
       const hqLvl = state.buildings.headquarters || 1;
       const durationMs = getBuildDuration(building as keyof Buildings, currentLevel, hqLvl);
-      const completesAt = Date.now() + durationMs;
 
-      // Push to upgrade queue (don't apply level yet)
+      // Push to upgrade queue. If queue is not empty, start timer from last item's completesAt
+      const lastCompletesAt = state.upgrades.length > 0 
+        ? Math.max(Date.now(), ...state.upgrades.map(u => u.completesAt))
+        : Date.now();
+      const completesAt = lastCompletesAt + durationMs;
+
       const newUpgrade: UpgradeEntry = {
         id: `${building}-${completesAt}`,
         building: building as keyof Buildings,

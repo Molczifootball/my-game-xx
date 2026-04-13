@@ -1,8 +1,7 @@
 "use client";
 
 import { useGame } from '@/context/GameContext';
-import { useState, useMemo, useRef } from 'react';
-import BugReportModal from '@/components/BugReportModal';
+import { useState, useMemo } from 'react';
 import PlayerContextMenu from '@/components/PlayerContextMenu';
 import { useRouter } from 'next/navigation';
 
@@ -20,7 +19,6 @@ export default function RankingsPage() {
   const router = useRouter();
   const [sortBy, setSortBy] = useState<SortKey>('points');
   const [search, setSearch] = useState('');
-  const [showBugReport, setShowBugReport] = useState(false);
   const [contextMenu, setContextMenu] = useState<{ playerName: string; x: number; y: number } | null>(null);
 
   const playerRankings: PlayerEntry[] = useMemo(() => {
@@ -74,12 +72,6 @@ export default function RankingsPage() {
           <h1 className="text-lg text-white font-bold medieval-font tracking-widest uppercase">World Rankings</h1>
           <div className="flex items-center gap-3">
             <span className="text-[9px] text-gray-500 font-mono">{leaderboard.length} players</span>
-            <button
-              onClick={() => setShowBugReport(true)}
-              className="text-[9px] px-2.5 py-1 rounded border border-red-500/30 text-red-500/60 hover:text-red-400 hover:border-red-400/50 hover:bg-red-900/10 transition-all font-bold uppercase tracking-widest flex items-center gap-1"
-            >
-              🐛 Bug
-            </button>
           </div>
         </div>
 
@@ -191,8 +183,6 @@ export default function RankingsPage() {
       </div>
 
       {/* Modals */}
-      {showBugReport && <BugReportModal onClose={() => setShowBugReport(false)} />}
-
       {contextMenu && (
         <PlayerContextMenu
           playerName={contextMenu.playerName}

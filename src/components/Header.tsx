@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useGame } from '@/context/GameContext';
 import { useSession } from 'next-auth/react';
 import UserOptionsModal from '@/components/UserOptionsModal';
+import BugReportModal from '@/components/BugReportModal';
 
 export default function Header() {
   const { state, activeVillage, setActiveVillageId } = useGame();
@@ -13,6 +14,7 @@ export default function Header() {
   const [serverTime, setServerTime] = useState<Date>(new Date());
   const pathname = usePathname();
   const [showOptions, setShowOptions] = useState(false);
+  const [showBugReport, setShowBugReport] = useState(false);
 
   const seenCountRef = useRef<number>(state.reports.length);
   const [unseenCount, setUnseenCount] = useState(0);
@@ -103,6 +105,15 @@ export default function Header() {
               );
             })}
           </nav>
+
+          {/* Bug Report button — after Rankings */}
+          <button
+            onClick={() => setShowBugReport(true)}
+            className="flex items-center gap-1.5 px-2.5 py-2 text-[9px] font-bold uppercase tracking-widest text-red-500/50 hover:text-red-400 hover:bg-red-900/10 transition-all border-b-2 border-transparent"
+          >
+            <span className="text-sm hidden lg:inline">🐛</span>
+            Bug
+          </button>
         </div>
 
         {/* Center: Village Switcher */}
@@ -159,6 +170,7 @@ export default function Header() {
       </div>
 
       {showOptions && <UserOptionsModal onClose={() => setShowOptions(false)} />}
+      {showBugReport && <BugReportModal onClose={() => setShowBugReport(false)} />}
 
       {/* Mobile village switcher */}
       {playerVillages.length > 1 && (
