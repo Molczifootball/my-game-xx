@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Noto_Serif } from 'next/font/google';
 import './globals.css';
+import { Analytics } from "@vercel/analytics/next";
 import Providers from '@/components/Providers';
 import { GameShell } from '@/components/GameShell';
 
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className="antialiased font-sans m-0 p-0 overflow-hidden h-full flex flex-col">
         <Providers>
           <GameShell>{children}</GameShell>
+          <Analytics />
         </Providers>
       </body>
     </html>
