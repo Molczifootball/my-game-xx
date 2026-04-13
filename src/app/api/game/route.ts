@@ -390,7 +390,11 @@ export async function POST(req: NextRequest) {
 
     // ── MARK READ ────────────────────────────────────────────────────────────
     if (action === 'mark_read') {
-      // Reports are client-side only for now — just acknowledge
+      const { id } = payload;
+      await prisma.battleReport.update({
+        where: { id, userId },
+        data: { isRead: true }
+      });
       return NextResponse.json({ success: true });
     }
 

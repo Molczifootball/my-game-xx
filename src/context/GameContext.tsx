@@ -260,6 +260,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
               loot: cmd.loot || { wood: 0, clay: 0, iron: 0, grain: 0, meat: 0, fish: 0 },
             };
           }),
+          reports: (data.reports || []).map((r: any) => ({
+            ...r,
+            timestamp: new Date(r.createdAt).getTime(),
+          })),
           worldMap,
           lastTick: Date.now()
         }));
