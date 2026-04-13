@@ -98,6 +98,11 @@ export default function LoginPage() {
           </div>
         </form>
       </div>
+      <div className="absolute bottom-4 left-0 right-0 text-center">
+        <span className="text-[9px] text-gray-600 font-mono uppercase tracking-widest opacity-40">
+          Property of <span className="text-primary/60">Malachite Software</span> © 2026
+        </span>
+      </div>
     </div>
   );
 }

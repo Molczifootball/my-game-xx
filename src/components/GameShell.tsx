@@ -58,6 +58,11 @@ export function GameShell({ children }: { children: React.ReactNode }) {
         </section>
       </main>
       <ChatPanel />
+      <footer className="shrink-0 py-1.5 px-4 bg-surface-base border-t border-outline-variant flex justify-center">
+        <span className="text-[9px] text-gray-600 font-mono uppercase tracking-widest opacity-50">
+          Property of <span className="text-primary/70">Malachite Software</span> © 2026
+        </span>
+      </footer>
     </GameProvider>
   );
 }
