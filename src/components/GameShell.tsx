@@ -7,6 +7,7 @@ import { GameProvider } from "@/context/GameContext";
 import Header from "@/components/Header";
 import ResourceBar from "@/components/ResourceBar";
 import SidebarLeft from "@/components/SidebarLeft";
+import ChatPanel from "@/components/ChatPanel";
 
 function isPublicPath(pathname: string): boolean {
   return pathname === "/login" || pathname === "/register" || pathname.startsWith("/api/");
@@ -56,6 +57,7 @@ export function GameShell({ children }: { children: React.ReactNode }) {
           {children}
         </section>
       </main>
+      <ChatPanel />
     </GameProvider>
   );
 }

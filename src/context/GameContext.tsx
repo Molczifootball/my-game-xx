@@ -236,6 +236,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: `${t.x}|${t.y}`,
           owner: t.ownerName,
           points: calculatePoints(t.buildings || {}),
+          // Map queued upgrades from DB format to ActiveUpgrade format
+          upgrades: Array.isArray(t.upgrades) ? t.upgrades.map((u: any) => ({
+            id: u.id,
+            building: u.building,
+            targetLevel: u.targetLevel,
+            completesAt: u.completesAt,
+          })) : [],
         }));
 
         setState(prev => ({

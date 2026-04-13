@@ -4,13 +4,15 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useGame } from '@/context/GameContext';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
+import UserOptionsModal from '@/components/UserOptionsModal';
 
 export default function Header() {
   const { state, activeVillage, setActiveVillageId } = useGame();
   const { data: session } = useSession();
   const [serverTime, setServerTime] = useState<Date>(new Date());
   const pathname = usePathname();
+  const [showOptions, setShowOptions] = useState(false);
 
   const seenCountRef = useRef<number>(state.reports.length);
   const [unseenCount, setUnseenCount] = useState(0);
@@ -143,14 +145,20 @@ export default function Header() {
           <div className="w-px h-4 bg-outline-variant" />
 
           <div className="flex items-center gap-2 text-[10px]">
-            <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold">
+            <button
+              onClick={() => setShowOptions(true)}
+              className="w-6 h-6 rounded-full bg-primary/20 hover:bg-primary/30 flex items-center justify-center text-primary text-xs font-bold transition-all"
+              title="Player Options"
+            >
               {(session?.user?.name || state.playerName).charAt(0).toUpperCase()}
-            </div>
+            </button>
             <span className="text-gray-300 font-bold hidden lg:inline">{session?.user?.name || state.playerName}</span>
-            <button onClick={() => signOut({ callbackUrl: '/login' })} className="text-[8px] text-gray-500 hover:text-red-400 transition-colors ml-1" title="Sign out">⏻</button>
+            <button onClick={() => setShowOptions(true)} className="text-[8px] text-gray-500 hover:text-primary transition-colors ml-1" title="Options">⚙️</button>
           </div>
         </div>
       </div>
+
+      {showOptions && <UserOptionsModal onClose={() => setShowOptions(false)} />}
 
       {/* Mobile village switcher */}
       {playerVillages.length > 1 && (

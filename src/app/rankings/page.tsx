@@ -1,7 +1,10 @@
 "use client";
 
 import { useGame } from '@/context/GameContext';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import BugReportModal from '@/components/BugReportModal';
+import PlayerContextMenu from '@/components/PlayerContextMenu';
+import { useRouter } from 'next/navigation';
 
 type SortKey = 'points' | 'villages' | 'name';
 
@@ -13,9 +16,12 @@ interface PlayerEntry {
 }
 
 export default function RankingsPage() {
-  const { state, playerPoints } = useGame();
+  const { state } = useGame();
+  const router = useRouter();
   const [sortBy, setSortBy] = useState<SortKey>('points');
   const [search, setSearch] = useState('');
+  const [showBugReport, setShowBugReport] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{ playerName: string; x: number; y: number } | null>(null);
 
   const playerRankings: PlayerEntry[] = useMemo(() => {
     const map = new Map<string, PlayerEntry>();
@@ -23,8 +29,8 @@ export default function RankingsPage() {
       .filter(t => t.type === 'village' || t.type === 'player')
       .forEach(tile => {
         const owner = tile.owner ?? 'Unknown';
-        const isYou = tile.type === 'player' || owner === state.playerName;
-        const pts = tile.type === 'player' ? playerPoints : (tile.points ?? 0);
+        const isYou = owner === state.playerName;
+        const pts = tile.points ?? 0;
         if (map.has(owner)) {
           const entry = map.get(owner)!;
           entry.totalPoints += pts;
@@ -38,7 +44,7 @@ export default function RankingsPage() {
       if (sortBy === 'villages') return b.villageCount - a.villageCount;
       return a.owner.localeCompare(b.owner);
     });
-  }, [state.worldMap, sortBy, playerPoints, state.playerName]);
+  }, [state.worldMap, sortBy, state.playerName]);
 
   const leaderboard = useMemo(() => playerRankings.filter(p => p.owner !== 'Barbarian'), [playerRankings]);
   const filtered = useMemo(() => {
@@ -50,13 +56,31 @@ export default function RankingsPage() {
   const yourRank = leaderboard.findIndex(p => p.isYou) + 1;
   const youEntry = leaderboard.find(p => p.isYou);
 
+  const handlePlayerClick = (e: React.MouseEvent, playerName: string) => {
+    e.preventDefault();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setContextMenu({ playerName, x: rect.right + 8, y: rect.top });
+  };
+
+  const handleNavigate = (x: number, y: number) => {
+    router.push('/map');
+  };
+
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-surface-dim">
       {/* Header */}
       <div className="shrink-0 px-6 py-4 border-b border-outline-variant bg-surface-low">
         <div className="flex justify-between items-center mb-3">
           <h1 className="text-lg text-white font-bold medieval-font tracking-widest uppercase">World Rankings</h1>
-          <span className="text-[9px] text-gray-500 font-mono">{leaderboard.length} players</span>
+          <div className="flex items-center gap-3">
+            <span className="text-[9px] text-gray-500 font-mono">{leaderboard.length} players</span>
+            <button
+              onClick={() => setShowBugReport(true)}
+              className="text-[9px] px-2.5 py-1 rounded border border-red-500/30 text-red-500/60 hover:text-red-400 hover:border-red-400/50 hover:bg-red-900/10 transition-all font-bold uppercase tracking-widest flex items-center gap-1"
+            >
+              🐛 Bug
+            </button>
+          </div>
         </div>
 
         {/* Your rank card */}
@@ -144,9 +168,12 @@ export default function RankingsPage() {
                   </span>
 
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className={`text-xs font-bold truncate ${entry.isYou ? 'text-primary' : 'text-gray-300'}`}>
+                    <button
+                      onClick={(e) => handlePlayerClick(e, entry.owner)}
+                      className={`text-xs font-bold truncate hover:underline transition-colors text-left ${entry.isYou ? 'text-primary' : 'text-gray-300 hover:text-white'}`}
+                    >
                       {entry.owner}
-                    </span>
+                    </button>
                     {entry.isYou && (
                       <span className="text-[8px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-bold uppercase shrink-0">You</span>
                     )}
@@ -162,6 +189,19 @@ export default function RankingsPage() {
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      {showBugReport && <BugReportModal onClose={() => setShowBugReport(false)} />}
+
+      {contextMenu && (
+        <PlayerContextMenu
+          playerName={contextMenu.playerName}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={() => setContextMenu(null)}
+          onNavigate={handleNavigate}
+        />
+      )}
     </div>
   );
 }

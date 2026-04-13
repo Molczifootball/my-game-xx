@@ -4,23 +4,32 @@ import {
   getGranaryCapacity, getWarehouseCapacity 
 } from '@/utils/shared';
 
+export interface UpgradeEntry {
+  id: string;
+  building: keyof Buildings;
+  targetLevel: number;
+  completesAt: number; // Unix timestamp ms
+}
+
 export interface ProcessedTile {
   buildings: Buildings;
   resources: Resources;
   units: Partial<Units>;
+  upgrades: UpgradeEntry[];
   lastUpdated: number;
 }
 
 /**
  * Lazy Update Engine
- * Calculates state of a tile (production, barbarian growth) based on elapsed time.
+ * Calculates state of a tile (production, barbarian growth, upgrade queue flushing) based on elapsed time.
  */
 export function calculateTileState(
   currentBuildings: Buildings,
   currentResources: Resources,
   currentUnits: Partial<Units>,
   lastUpdatedAt: Date,
-  isBarbarian: boolean = false
+  isBarbarian: boolean = false,
+  currentUpgrades: UpgradeEntry[] = []
 ): ProcessedTile {
   const now = Date.now();
   const elapsedSeconds = Math.max(0, (now - lastUpdatedAt.getTime()) / 1000);
@@ -28,6 +37,17 @@ export function calculateTileState(
   const buildings = { ...currentBuildings };
   const resources = { ...currentResources };
   const units = { ...currentUnits };
+
+  // 0. Flush completed upgrades from queue
+  const pendingUpgrades: UpgradeEntry[] = [];
+  for (const upgrade of currentUpgrades) {
+    if (upgrade.completesAt <= now) {
+      // Apply the upgrade: set building to target level
+      buildings[upgrade.building] = upgrade.targetLevel;
+    } else {
+      pendingUpgrades.push(upgrade);
+    }
+  }
 
   // 1. Basic Resource Production
   const warehouseCap = getWarehouseCapacity(buildings.warehouse || 1);
@@ -60,27 +80,23 @@ export function calculateTileState(
 
   // 3. Barbarian Autonomous Growth
   if (isBarbarian) {
-    // Barbarians build and recruit slowly based on elapsed time
-    // Probability per hour: 30% chance to upgrade or recruit
     const hours = elapsedSeconds / 3600;
-    const growthCycles = Math.floor(hours * 0.3); // 0.3 chance events per hour
+    const growthCycles = Math.floor(hours * 0.3);
     
     for (let i = 0; i < growthCycles; i++) {
         const rand = Math.random();
         if (rand < 0.6) {
-            // Build something
             const keys = Object.keys(buildings) as (keyof Buildings)[];
             const target = keys[Math.floor(Math.random() * keys.length)];
             if (buildings[target] < 20) buildings[target]++;
         } else {
-            // Recruit basic units
             if (Math.random() > 0.5) units.pikeman = (units.pikeman || 0) + 2;
             else units.swordman = (units.swordman || 0) + 2;
         }
     }
   }
 
-  return { buildings, resources, units, lastUpdated: now };
+  return { buildings, resources, units, upgrades: pendingUpgrades, lastUpdated: now };
 }
 
 /**

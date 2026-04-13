@@ -156,3 +156,51 @@ export const UNIT_EMOJIS: Record<string, string> = {
 export const calculatePoints = (buildings: any) => {
   return Object.values(buildings).reduce((acc: number, level: any) => acc + Math.floor(10 * Math.pow(1.2, level || 0)), 0);
 };
+
+/**
+ * Calculate resource cost of upgrading a building to the next level.
+ * Returns { wood, clay, iron } cost.
+ */
+export const getBuildCost = (building: keyof Buildings, currentLevel: number): { wood: number; clay: number; iron: number } => {
+  const BASE: Record<keyof Buildings, { w: number; c: number; i: number }> = {
+    headquarters: { w: 90,   c: 80,   i: 70 },
+    timberCamp:   { w: 100,  c: 80,   i: 20 },
+    clayPit:      { w: 75,   c: 65,   i: 40 },
+    ironMine:     { w: 100,  c: 80,   i: 30 },
+    warehouse:    { w: 130,  c: 165,  i: 45 },
+    granary:      { w: 130,  c: 165,  i: 45 },
+    cityWall:     { w: 300,  c: 200,  i: 200 },
+    barracks:     { w: 200,  c: 170,  i: 90 },
+    stable:       { w: 270,  c: 240,  i: 260 },
+    castle:       { w: 1000, c: 1200, i: 1200 },
+    palace:       { w: 1000, c: 1200, i: 1200 },
+    farm:         { w: 45,   c: 40,   i: 30 },
+    huntersLodge: { w: 110,  c: 80,   i: 50 },
+    fishery:      { w: 90,   c: 75,   i: 60 },
+    residence:    { w: 110,  c: 120,  i: 70 },
+  };
+  const b = BASE[building] || { w: 100, c: 100, i: 100 };
+  const factor = Math.pow(1.26, currentLevel);
+  return {
+    wood: Math.floor(b.w * factor),
+    clay: Math.floor(b.c * factor),
+    iron: Math.floor(b.i * factor),
+  };
+};
+
+/**
+ * Calculate build duration in milliseconds for upgrading a building to the next level.
+ * HQ level reduces time by up to 50% at max level (20).
+ */
+export const getBuildDuration = (building: keyof Buildings, currentLevel: number, hqLevel: number): number => {
+  const BASE_SECS: Record<keyof Buildings, number> = {
+    headquarters: 120,  timberCamp: 60,   clayPit: 60,   ironMine: 60,
+    warehouse: 90,      granary: 90,      cityWall: 180,  barracks: 200,
+    stable: 240,        castle: 600,      palace: 600,   farm: 50,
+    huntersLodge: 90,   fishery: 90,      residence: 90,
+  };
+  const base = BASE_SECS[building] || 60;
+  const durationSec = base * Math.pow(1.22, currentLevel);
+  const hqMultiplier = Math.pow(0.95, hqLevel); // -5% per HQ level
+  return Math.floor(durationSec * hqMultiplier) * 1000; // Return ms
+};

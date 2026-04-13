@@ -21,8 +21,8 @@ export default function WorldMap() {
   const visualMode = state.mapSettings?.visualMode || 'classic';
   const showGrid = state.mapSettings?.showGrid ?? false;
 
-  const [centerX, setCenterX] = useState(25);
-  const [centerY, setCenterY] = useState(25);
+  const [centerX, setCenterX] = useState(50);
+  const [centerY, setCenterY] = useState(50);
   const [hoveredTile, setHoveredTile] = useState<MapTile | null>(null);
   const mousePosRef = useRef({ x: 0, y: 0 });
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -68,8 +68,8 @@ export default function WorldMap() {
   }, []);
 
   const panMap = useCallback((dx: number, dy: number) => {
-    setCenterX(prev => Math.max(1, Math.min(50, prev + dx)));
-    setCenterY(prev => Math.max(1, Math.min(50, prev + dy)));
+    setCenterX(prev => Math.max(1, Math.min(100, prev + dx)));
+    setCenterY(prev => Math.max(1, Math.min(100, prev + dy)));
   }, []);
 
   // Keyboard + mouse events
@@ -125,8 +125,8 @@ export default function WorldMap() {
       hasDragged.current = true;
       const tileOffsetX = Math.round(-dx / (tileSize + gap));
       const tileOffsetY = Math.round(-dy / (tileSize + gap));
-      setCenterX(Math.max(1, Math.min(50, dragStart.current.cx + tileOffsetX)));
-      setCenterY(Math.max(1, Math.min(50, dragStart.current.cy + tileOffsetY)));
+      setCenterX(Math.max(1, Math.min(100, dragStart.current.cx + tileOffsetX)));
+      setCenterY(Math.max(1, Math.min(100, dragStart.current.cy + tileOffsetY)));
     }
   }, [tileSize]);
 

@@ -21,6 +21,8 @@ model User {
   gameSave      GameSave?
   villages      WorldTile[] @relation("PlayerVillages")
   commands      CombatCommand[] @relation("PlayerCommands")
+  chatMessages  ChatMessage[]
+  bugReports    BugReport[]
 }
 
 model Account {
@@ -80,6 +82,8 @@ model WorldTile {
   buildings   Json?
   resources   Json?
   units       Json?
+  upgrades    Json?   // build queue: UpgradeEntry[]
+  recruitment Json?   // training queue: RecruitmentEntry[]
   endorsement Int?     @default(100)
   scoutedAt   DateTime?
   lastAttackAt DateTime?
@@ -106,4 +110,25 @@ model CombatCommand {
   targetOwnerId    String?
   createdAt        DateTime @default(now())
   user             User     @relation("PlayerCommands", fields: [ownerId], references: [id])
+}
+
+// Global chat
+model ChatMessage {
+  id         String   @id @default(cuid())
+  content    String
+  authorId   String
+  authorName String
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [authorId], references: [id])
+}
+
+// Bug reports
+model BugReport {
+  id           String   @id @default(cuid())
+  description  String
+  page         String?
+  reporterId   String?
+  reporterName String?
+  createdAt    DateTime @default(now())
+  user         User?    @relation(fields: [reporterId], references: [id])
 }

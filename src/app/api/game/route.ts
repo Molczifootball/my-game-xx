@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/db';
 import { auth as nextAuth } from '@/lib/auth';
-import { calculateTileState, resolveBattle } from '@/lib/game-engine';
-import { Buildings, Resources, Units } from '@/utils/shared';
+import { calculateTileState, resolveBattle, UpgradeEntry } from '@/lib/game-engine';
+import { Buildings, Resources, Units, getBuildCost, getBuildDuration, MAX_LEVELS } from '@/utils/shared';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,18 +11,26 @@ async function getAuthAndPrisma() {
   return { auth: nextAuth, prisma };
 }
 
-// Helper: Find a spawn point for new players
+// Helper: Find a spawn point for new players — prefer tiles closest to center (50,50)
 async function spawnPlayer(prisma: any, userId: string, playerName: string) {
-  // Find a random grass tile that isn't near too many players (simple logic for now)
+  // Get all unowned grass tiles
   const grassTiles = await prisma.worldTile.findMany({
-    where: { type: 'grass' },
-    take: 50,
-    orderBy: { updatedAt: 'asc' } // Pick older grass tiles
+    where: { type: 'grass', ownerId: null },
   });
 
   if (grassTiles.length === 0) throw new Error("No space left on map!");
 
-  const spawnTile = grassTiles[Math.floor(Math.random() * grassTiles.length)];
+  // Sort by distance to center (50, 50) — closest first
+  const CENTER_X = 50, CENTER_Y = 50;
+  grassTiles.sort((a: any, b: any) => {
+    const distA = Math.sqrt(Math.pow(a.x - CENTER_X, 2) + Math.pow(a.y - CENTER_Y, 2));
+    const distB = Math.sqrt(Math.pow(b.x - CENTER_X, 2) + Math.pow(b.y - CENTER_Y, 2));
+    return distA - distB;
+  });
+
+  // Pick from the 5 closest tiles randomly to avoid all players stacking on the same spot
+  const candidates = grassTiles.slice(0, 5);
+  const spawnTile = candidates[Math.floor(Math.random() * candidates.length)];
 
   // Initialize player village
   return await prisma.worldTile.update({
@@ -59,33 +67,37 @@ export async function GET(req: NextRequest) {
       villages = [newVillage];
     }
 
-    // 3. Process each village (Lazy Update)
+    // 3. Process each village (Lazy Update — flush upgrade queue + resources)
     const processedVillages = await Promise.all(villages.map(async (v: any) => {
+      const upgrades: UpgradeEntry[] = Array.isArray(v.upgrades) ? v.upgrades : [];
       const updated = calculateTileState(
         v.buildings as Buildings, 
         v.resources as Resources, 
         v.units as Units, 
-        v.updatedAt
+        v.updatedAt,
+        false,
+        upgrades
       );
-      if (updated.lastUpdated !== v.updatedAt.getTime()) {
-        // Save back lazy update
+      const hasChanges = updated.lastUpdated !== v.updatedAt.getTime()
+        || updated.upgrades.length !== upgrades.length;
+      if (hasChanges) {
+        // Save back lazy update (resources + any flushed upgrades)
         return await prisma.worldTile.update({
           where: { id: v.id },
-          data: { resources: updated.resources, updatedAt: new Date(updated.lastUpdated) }
+          data: { 
+            buildings: updated.buildings as any,
+            resources: updated.resources as any,
+            upgrades: updated.upgrades as any,
+            updatedAt: new Date(updated.lastUpdated)
+          }
         });
       }
       return v;
     }));
 
-    // 4. Fetch nearby world map (e.g. 30x30 around first village)
+    // 4. Fetch the FULL world map (all 10,000 tiles)
     const first = processedVillages[0];
-    const range = 15;
-    const worldMap = await prisma.worldTile.findMany({
-      where: {
-        x: { gte: first.x - range, lte: first.x + range },
-        y: { gte: first.y - range, lte: first.y + range }
-      }
-    });
+    const worldMap = await prisma.worldTile.findMany({});
 
     // 5. Get active commands (Only related to player)
     const commands = await prisma.combatCommand.findMany({
@@ -107,7 +119,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST — Handle specific actions (Upgrade, Recruit, Dispatch)
+// POST — Handle specific actions (Upgrade, Recruit, Dispatch, Dev)
 export async function POST(req: NextRequest) {
   try {
     const { prisma } = await getAuthAndPrisma();
@@ -117,37 +129,78 @@ export async function POST(req: NextRequest) {
     const { action, payload } = await req.json();
     const userId = session.user.id;
 
+    // ── UPGRADE ──────────────────────────────────────────────────────────────
     if (action === 'upgrade') {
       const { x, y, building } = payload;
       const tile = await prisma.worldTile.findUnique({ where: { x_y: { x, y } } });
       if (!tile) return NextResponse.json({ error: 'Village not found' }, { status: 404 });
       if (tile.ownerId !== userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
 
-      // Lazy update first to get current resources
+      // Flush any completed upgrades first
+      const existingUpgrades: UpgradeEntry[] = Array.isArray(tile.upgrades) ? (tile.upgrades as any[]) : [];
       const state = calculateTileState(
-        tile.buildings as Buildings, 
-        tile.resources as Resources, 
-        tile.units as Units, 
-        tile.updatedAt
+        tile.buildings as Buildings, tile.resources as Resources,
+        tile.units as Units, tile.updatedAt, false, existingUpgrades
       );
-      const lvl = (state.buildings[building] || 0) + 1;
-      
-      // Verification: simplified for this step
-      const cost = 100 * Math.pow(1.2, lvl - 1);
-      if (state.resources.wood < cost) return NextResponse.json({ error: 'Too expensive' }, { status: 400 });
 
-      // Execute upgrade
-      const nB = { ...state.buildings, [building]: lvl };
-      const nR = { ...state.resources, wood: state.resources.wood - cost };
+      // Queue cap: 3 pending upgrades max
+      if (state.upgrades.length >= 3) {
+        return NextResponse.json({ error: 'Build queue full (max 3)' }, { status: 400 });
+      }
+
+      // Already building this same building? Reject
+      if (state.upgrades.some(u => u.building === building)) {
+        return NextResponse.json({ error: 'Already upgrading this building' }, { status: 400 });
+      }
+
+      const currentLevel = state.buildings[building as keyof Buildings] || 0;
+      const maxLvl = MAX_LEVELS[building as keyof Buildings];
+      if (currentLevel >= maxLvl) {
+        return NextResponse.json({ error: 'Already at max level' }, { status: 400 });
+      }
+
+      // Resource cost
+      const cost = getBuildCost(building as keyof Buildings, currentLevel);
+      if (state.resources.wood < cost.wood || state.resources.clay < cost.clay || state.resources.iron < cost.iron) {
+        return NextResponse.json({ error: 'Insufficient resources' }, { status: 400 });
+      }
+
+      // Build duration (HQ reduces time)
+      const hqLvl = state.buildings.headquarters || 1;
+      const durationMs = getBuildDuration(building as keyof Buildings, currentLevel, hqLvl);
+      const completesAt = Date.now() + durationMs;
+
+      // Push to upgrade queue (don't apply level yet)
+      const newUpgrade: UpgradeEntry = {
+        id: `${building}-${completesAt}`,
+        building: building as keyof Buildings,
+        targetLevel: currentLevel + 1,
+        completesAt,
+      };
+      const newUpgrades = [...state.upgrades, newUpgrade];
+
+      // Deduct resources
+      const newResources = {
+        ...state.resources,
+        wood: state.resources.wood - cost.wood,
+        clay: state.resources.clay - cost.clay,
+        iron: state.resources.iron - cost.iron,
+      };
 
       await prisma.worldTile.update({
         where: { id: tile.id },
-        data: { buildings: nB, resources: nR, updatedAt: new Date() }
+        data: { 
+          buildings: state.buildings as any,
+          resources: newResources as any, 
+          upgrades: newUpgrades as any,
+          updatedAt: new Date(state.lastUpdated)
+        }
       });
 
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, completesAt, durationMs });
     }
 
+    // ── RECRUIT ──────────────────────────────────────────────────────────────
     if (action === 'recruit') {
       const { x, y, unit, count } = payload;
       const tile = await prisma.worldTile.findUnique({ where: { x_y: { x, y } } });
@@ -155,12 +208,10 @@ export async function POST(req: NextRequest) {
       if (tile.ownerId !== userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
 
       const state = calculateTileState(
-        tile.buildings as Buildings, 
-        tile.resources as Resources, 
-        tile.units as Units, 
-        tile.updatedAt
+        tile.buildings as Buildings, tile.resources as Resources,
+        tile.units as Units, tile.updatedAt
       );
-      const nU = { ...state.units, [unit]: (state.units[unit] || 0) + count };
+      const nU = { ...state.units, [unit]: (state.units[unit as keyof Units] || 0) + count };
 
       await prisma.worldTile.update({
         where: { id: tile.id },
@@ -169,6 +220,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    // ── DISPATCH ─────────────────────────────────────────────────────────────
     if (action === 'dispatch') {
       const { originX, originY, targetX, targetY, units, type } = payload;
       const origin = await prisma.worldTile.findUnique({ where: { x_y: { x: originX, y: originY } } });
@@ -176,25 +228,20 @@ export async function POST(req: NextRequest) {
       if (!origin) return NextResponse.json({ error: 'Origin not found' }, { status: 404 });
       if (origin.ownerId !== userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
 
-      // Calculate travel time (simplified)
       const dist = Math.sqrt(Math.pow(targetX - originX, 2) + Math.pow(targetY - originY, 2));
-      const travelTimeMs = dist * 10 * 1000; // 10s per tile for now
+      const travelTimeMs = dist * 10 * 1000;
 
       await prisma.combatCommand.create({
         data: {
-          type,
-          status: 'marching',
-          originX, originY,
-          targetX, targetY,
-          units,
-          returnsAt: new Date(Date.now() + travelTimeMs * 2), // Round trip storage
+          type, status: 'marching',
+          originX, originY, targetX, targetY, units,
+          returnsAt: new Date(Date.now() + travelTimeMs * 2),
           arrivesAt: new Date(Date.now() + travelTimeMs),
           ownerId: userId,
           targetOwnerId: target?.ownerId || null,
         }
       });
 
-      // Deduct units from origin
       const currentUnits = (origin.units as any) || {};
       const nU = { ...currentUnits };
       Object.entries(units).forEach(([u, count]) => {
@@ -206,6 +253,62 @@ export async function POST(req: NextRequest) {
         data: { units: nU, updatedAt: new Date() }
       });
 
+      return NextResponse.json({ success: true });
+    }
+
+    // ── RENAME ───────────────────────────────────────────────────────────────
+    if (action === 'rename') {
+      const { villageId, name } = payload;
+      const [vx, vy] = villageId.split('|').map(Number);
+      const tile = await prisma.worldTile.findUnique({ where: { x_y: { x: vx, y: vy } } });
+      if (!tile || tile.ownerId !== userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      await prisma.worldTile.update({ where: { id: tile.id }, data: { name: name.trim().slice(0, 32) } });
+      return NextResponse.json({ success: true });
+    }
+
+    // ── MARK READ ────────────────────────────────────────────────────────────
+    if (action === 'mark_read') {
+      // Reports are client-side only for now — just acknowledge
+      return NextResponse.json({ success: true });
+    }
+
+    // ── DEV: ADD RESOURCES ───────────────────────────────────────────────────
+    if (action === 'dev_resources') {
+      const { villageId } = payload;
+      const [vx, vy] = villageId.split('|').map(Number);
+      const tile = await prisma.worldTile.findUnique({ where: { x_y: { x: vx, y: vy } } });
+      if (!tile || tile.ownerId !== userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      const r = tile.resources as any;
+      await prisma.worldTile.update({
+        where: { id: tile.id },
+        data: { resources: { wood: (r.wood||0)+100000, clay: (r.clay||0)+100000, iron: (r.iron||0)+100000, grain: (r.grain||0)+100000, meat: (r.meat||0)+100000, fish: (r.fish||0)+100000 }, updatedAt: new Date() }
+      });
+      return NextResponse.json({ success: true });
+    }
+
+    // ── DEV: MAX ALL BUILDINGS ───────────────────────────────────────────────
+    if (action === 'dev_max') {
+      const { villageId } = payload;
+      const [vx, vy] = villageId.split('|').map(Number);
+      const tile = await prisma.worldTile.findUnique({ where: { x_y: { x: vx, y: vy } } });
+      if (!tile || tile.ownerId !== userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      await prisma.worldTile.update({
+        where: { id: tile.id },
+        data: { buildings: MAX_LEVELS, upgrades: [], updatedAt: new Date() }
+      });
+      return NextResponse.json({ success: true });
+    }
+
+    // ── DEV: ADD ARMY ────────────────────────────────────────────────────────
+    if (action === 'dev_army') {
+      const { villageId, units } = payload;
+      const [vx, vy] = villageId.split('|').map(Number);
+      const tile = await prisma.worldTile.findUnique({ where: { x_y: { x: vx, y: vy } } });
+      if (!tile || tile.ownerId !== userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      const existing = (tile.units as any) || {};
+      const merged: any = { ...existing };
+      Object.entries(units).forEach(([u, c]) => { merged[u] = (merged[u] || 0) + (c as number); });
+      await prisma.worldTile.update({ where: { id: tile.id }, data: { units: merged, updatedAt: new Date() } });
       return NextResponse.json({ success: true });
     }
 
