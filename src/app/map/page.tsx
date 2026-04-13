@@ -58,7 +58,8 @@ export default function WorldMap() {
       setCenterX(currentActive.x);
       setCenterY(currentActive.y);
     }
-  }, [currentActive, searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentActive?.id, searchParams]);
 
   // ResizeObserver for dynamic viewport
   useEffect(() => {
