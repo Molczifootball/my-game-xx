@@ -55,7 +55,12 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center bg-surface-dim p-4">
+    <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden" style={{
+      backgroundImage: 'linear-gradient(rgba(10, 10, 15, 0.8), rgba(10, 10, 15, 0.8)), url(/images/slavic_bg.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed'
+    }}>
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <img 

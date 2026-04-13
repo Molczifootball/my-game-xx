@@ -4,7 +4,12 @@ import Link from 'next/link';
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-surface-dim p-4 md:p-8 flex flex-col items-center">
+    <div className="min-h-screen p-4 md:p-8 flex flex-col items-center relative overflow-hidden" style={{
+      backgroundImage: 'linear-gradient(rgba(10, 10, 15, 0.9), rgba(10, 10, 15, 0.9)), url(/images/slavic_bg.png)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed'
+    }}>
       <div className="max-w-3xl w-full glass-panel border border-outline-variant p-6 md:p-10 rounded-xl space-y-6">
         <div className="mb-8 border-b border-outline-variant pb-6">
           <div className="flex justify-between items-center gap-4">
