@@ -16,6 +16,7 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  isAdmin       Boolean   @default(false)
   accounts      Account[]
   sessions      Session[]
   gameSave      GameSave?
@@ -23,6 +24,7 @@ model User {
   commands      CombatCommand[] @relation("PlayerCommands")
   chatMessages  ChatMessage[]
   bugReports    BugReport[]
+  battleReports BattleReport[]
 }
 
 model Account {
@@ -131,4 +133,38 @@ model BugReport {
   reporterName String?
   createdAt    DateTime @default(now())
   user         User?    @relation(fields: [reporterId], references: [id])
+}
+
+// Combat Reports
+model BattleReport {
+  id              String   @id @default(cuid())
+  userId          String
+  createdAt       DateTime @default(now())
+  
+  targetX         Int
+  targetY         Int
+  targetName      String
+  type            String   // 'attack' | 'scout'
+  result          String   // 'victory' | 'defeat' | 'scouted'
+  direction       String   // 'outgoing' | 'incoming'
+  loot            Json
+  isRead          Boolean  @default(false)
+  
+  // Optional detailed JSON state
+  attackerUnits   Json?
+  attackerLosses  Json?
+  defenderUnits   Json?
+  defenderLosses  Json?
+  
+  targetResources Json?
+  targetUnits     Json?
+  targetBuildings Json?
+  endorsementDrop Int?
+  
+  attackerName    String?
+  originX         Int?
+  originY         Int?
+  originName      String?
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

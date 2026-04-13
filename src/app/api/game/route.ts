@@ -99,7 +99,121 @@ export async function GET(req: NextRequest) {
     const first = processedVillages[0];
     const worldMap = await prisma.worldTile.findMany({});
 
-    // 5. Get active commands (Only related to player)
+    // 5. COMBAT RESOLUTION LOOP
+    const now = new Date();
+    
+    // a) Resolve expired marching commands
+    const expiredMarching = await prisma.combatCommand.findMany({
+      where: { status: 'marching', arrivesAt: { lte: now } }
+    });
+    for (const cmd of expiredMarching) {
+      if (cmd.type === 'attack') {
+        const targetTile = await prisma.worldTile.findUnique({ where: { x_y: { x: cmd.targetX, y: cmd.targetY } } });
+        if (targetTile) {
+          const tBuildings = targetTile.buildings as any || {};
+          const tResources = targetTile.resources as any || {};
+          const tUnits = targetTile.units as any || {};
+          const bResult = resolveBattle(cmd.units as any, tUnits, tBuildings.cityWall || 0);
+
+          let stolen = { wood: 0, clay: 0, iron: 0, grain: 0, meat: 0, fish: 0 };
+          let survivors = bResult.attackerUnits;
+          let survivingCount = Object.values(survivors).reduce((a: number, c: any) => a + (c || 0), 0);
+
+          if (bResult.winner === 'attacker' && survivingCount > 0) {
+            // Steal ~20% of resources as a baseline
+            ['wood', 'clay', 'iron', 'grain', 'meat', 'fish'].forEach((res) => {
+              const available = tResources[res] || 0;
+              const taken = Math.floor(available * 0.2);
+              stolen[res as keyof typeof stolen] = taken;
+              tResources[res] = available - taken;
+            });
+            // Update target
+            await prisma.worldTile.update({
+              where: { id: targetTile.id },
+              data: { resources: tResources, units: bResult.defenderUnits as any, lastAttackAt: now }
+            });
+          } else {
+            // Update target troops if they won
+            await prisma.worldTile.update({
+              where: { id: targetTile.id },
+              data: { units: bResult.defenderUnits as any, lastAttackAt: now }
+            });
+          }
+
+          // Create Battle Report
+          const attackerReport = {
+            userId: cmd.ownerId,
+            targetX: cmd.targetX, targetY: cmd.targetY, targetName: targetTile.name || 'Unknown',
+            type: 'attack', result: bResult.winner === 'attacker' ? 'victory' : 'defeat', direction: 'outgoing',
+            loot: stolen as any, isRead: false,
+            attackerUnits: cmd.units as any, attackerLosses: bResult.attackerLosses as any,
+            defenderUnits: bResult.defenderUnits as any, defenderLosses: bResult.defenderLosses as any
+          };
+          await prisma.battleReport.create({ data: attackerReport });
+          
+          if (targetTile.ownerId) {
+            await prisma.battleReport.create({ data: { ...attackerReport, userId: targetTile.ownerId, direction: 'incoming', result: bResult.winner === 'defender' ? 'victory' : 'defeat', isRead: false } as any });
+          }
+
+          if (survivingCount > 0) {
+            // Bounce it back
+            await prisma.combatCommand.update({
+              where: { id: cmd.id },
+              data: { status: 'returning', units: survivors as any, loot: stolen }
+            });
+          } else {
+            // Everyone died
+            await prisma.combatCommand.delete({ where: { id: cmd.id } });
+          }
+        }
+      } else if (cmd.type === 'scout') {
+        const targetTile = await prisma.worldTile.findUnique({ where: { x_y: { x: cmd.targetX, y: cmd.targetY } } });
+        if (targetTile) {
+          // Add intel timestamp
+          await prisma.worldTile.update({
+             where: { id: targetTile.id },
+             data: { scoutedAt: now }
+          });
+          const report = {
+            userId: cmd.ownerId,
+            targetX: cmd.targetX, targetY: cmd.targetY, targetName: targetTile.name || 'Unknown',
+            type: 'scout', result: 'scouted', direction: 'outgoing',
+            loot: { wood: 0, clay: 0, iron: 0, grain: 0, meat: 0, fish: 0 } as any, isRead: false,
+            targetResources: targetTile.resources as any, targetUnits: targetTile.units as any, targetBuildings: targetTile.buildings as any
+          };
+          await prisma.battleReport.create({ data: report });
+          // Bounce back
+          await prisma.combatCommand.update({ where: { id: cmd.id }, data: { status: 'returning' } });
+        }
+      }
+    }
+
+    // b) Resolve returning commands
+    const expiredReturning = await prisma.combatCommand.findMany({
+      where: { status: 'returning', returnsAt: { lte: now } }
+    });
+    for (const cmd of expiredReturning) {
+      const originTile = await prisma.worldTile.findUnique({ where: { x_y: { x: cmd.originX, y: cmd.originY } } });
+      if (originTile) {
+        const oResources = originTile.resources as any || { wood: 0, clay: 0, iron: 0, grain: 0, meat: 0, fish: 0 };
+        const oUnits = originTile.units as any || {};
+        const cmdLoot = cmd.loot as any || {};
+        const cmdUnits = cmd.units as any || {};
+
+        // Merge units
+        Object.keys(cmdUnits).forEach(u => { oUnits[u] = (oUnits[u] || 0) + (cmdUnits[u] || 0); });
+        // Deposit loot
+        Object.keys(cmdLoot).forEach(res => { oResources[res] = (oResources[res] || 0) + (cmdLoot[res] || 0); });
+
+        await prisma.worldTile.update({
+          where: { id: originTile.id },
+          data: { resources: oResources, units: oUnits }
+        });
+      }
+      await prisma.combatCommand.delete({ where: { id: cmd.id } });
+    }
+
+    // 6. Get active commands (Only related to player)
     const commands = await prisma.combatCommand.findMany({
       where: {
         OR: [{ ownerId: userId }, { targetOwnerId: userId }]

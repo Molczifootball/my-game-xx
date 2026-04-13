@@ -99,14 +99,19 @@ function TileVisualInner({ tile, visualMode, playerName, tileSize }: TileVisualP
         {/* Grass background under village */}
         <div className="absolute inset-0" style={{ background: GRASS_BASE }} />
 
-        {/* Player village: blue glow */}
+        {/* My village: blue glow */}
         {isSelf && (
           <div className="absolute inset-0 bg-blue-500/25 ring-1 ring-blue-400/50 village-pulse z-[1]" />
         )}
 
-        {/* Barbarian village: red tint */}
-        {isBarbarian && !isSelf && (
-          <div className={`absolute inset-0 bg-red-900/25 ring-1 ring-red-500/30 z-[1] ${isStaleIntel ? 'opacity-50' : ''}`} />
+        {/* Barbarian village: grey tint */}
+        {isBarbarian && (
+          <div className={`absolute inset-0 bg-gray-600/25 ring-1 ring-gray-400/30 z-[1] ${isStaleIntel ? 'opacity-50' : ''}`} />
+        )}
+
+        {/* Other player's village: red tint */}
+        {!isSelf && !isBarbarian && (
+          <div className={`absolute inset-0 bg-red-900/40 ring-1 ring-red-500/50 z-[1]`} />
         )}
 
         {/* Village icon — full-tile image */}

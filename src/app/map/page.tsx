@@ -388,7 +388,7 @@ export default function WorldMap() {
         >
           <div className="flex flex-col gap-2 min-w-[140px]">
             <div className="flex items-center gap-3 border-b border-white/5 pb-2">
-              <div className="w-3 h-3 rounded-full shadow-inner" style={{ backgroundColor: getTileColor(hoveredTile.type) }}></div>
+              <div className="w-3 h-3 rounded-full shadow-inner" style={{ backgroundColor: getTileColor(hoveredTile, state.playerName) }}></div>
               <div className="text-xs font-bold text-white tracking-widest uppercase">
                 {hoveredTile.name || hoveredTile.type.replace('_', ' ')}
               </div>
@@ -703,14 +703,18 @@ export default function WorldMap() {
   );
 }
 
-function getTileColor(type: MapTile['type']) {
-  switch (type) {
+function getTileColor(tile: MapTile, playerName: string) {
+  if (tile.type === 'village' || tile.type === 'player') {
+    if (tile.owner === playerName) return '#3b82f6'; // blue
+    if (tile.owner === 'Barbarian') return '#6b7280'; // grey
+    return '#ef4444'; // red for other players
+  }
+
+  switch (tile.type) {
     case 'grass': return '#2d5a2d';
     case 'forest': return '#1a4a1a';
     case 'mountain': return '#6a6a5a';
     case 'water': return '#1a3a6a';
-    case 'village': return '#8a3333';
-    case 'player': return '#3366cc';
     default: return '#1a261a';
   }
 }

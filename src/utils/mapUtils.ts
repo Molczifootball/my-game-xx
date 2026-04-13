@@ -85,11 +85,13 @@ export function getTerrainType(x: number, y: number): 'grass' | 'forest' | 'moun
 
 /** Color for minimap tiles */
 export function getMinimapColor(type: MapTile['type'], owner?: string, playerName?: string): string {
+  if (type === 'village' || type === 'player') {
+    if (owner === playerName) return '#3b82f6'; // blue
+    if (owner === 'Barbarian') return '#6b7280'; // grey
+    return '#ef4444'; // red
+  }
+
   switch (type) {
-    case 'player': return '#3388ff';
-    case 'village':
-      if (owner === playerName) return '#3388ff';
-      return '#aa3333';
     case 'forest': return '#1a3a1a';
     case 'mountain': return '#5a5a4a';
     case 'water': return '#1a3a6a';

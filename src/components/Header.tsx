@@ -136,6 +136,19 @@ export default function Header() {
 
         {/* Right: Time + Player + Dev */}
         <div className="flex items-center gap-3 shrink-0">
+          {session?.user?.email === 'molczanpat@gmail.com' && (
+            <Link
+              href="/admin"
+              className={`text-[9px] px-2 py-1 rounded font-bold uppercase tracking-wider transition-all
+                ${pathname === '/admin'
+                  ? 'text-amber-400 bg-amber-500/10'
+                  : 'text-amber-600 hover:text-amber-400'
+                }`}
+            >
+              👑 ADMIN
+            </Link>
+          )}
+
           <Link
             href="/dev"
             className={`text-[9px] px-2 py-1 rounded font-bold uppercase tracking-wider transition-all

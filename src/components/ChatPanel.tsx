@@ -20,6 +20,7 @@ export default function ChatPanel() {
   const [unread, setUnread] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastCountRef = useRef(0);
+  const isFirstLoad = useRef(true);
 
   const fetchMessages = async () => {
     try {
@@ -27,10 +28,16 @@ export default function ChatPanel() {
       const data = await res.json();
       if (data.messages) {
         setMessages(data.messages);
-        if (!open && data.messages.length > lastCountRef.current) {
-          setUnread(prev => prev + (data.messages.length - lastCountRef.current));
+        
+        if (isFirstLoad.current) {
+          lastCountRef.current = data.messages.length;
+          isFirstLoad.current = false;
+        } else {
+          if (!open && data.messages.length > lastCountRef.current) {
+            setUnread(prev => prev + (data.messages.length - lastCountRef.current));
+          }
+          lastCountRef.current = data.messages.length;
         }
-        lastCountRef.current = data.messages.length;
       }
     } catch {}
   };
