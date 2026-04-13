@@ -220,12 +220,19 @@ export async function GET(req: NextRequest) {
       }
     });
 
+    // 7. Get user's battle reports
+    const reports = await prisma.battleReport.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' }
+    });
+
     return NextResponse.json({
       playerName,
       activeVillageId: `${first.x}|${first.y}`,
       villages: processedVillages,
       worldMap,
-      commands
+      commands,
+      reports
     });
   } catch (error) {
     console.error('Failed to load multiplayer session:', error);

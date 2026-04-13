@@ -109,6 +109,18 @@ export default function RegisterPage() {
             <span className="text-[8px] text-gray-600 mt-0.5 block">Minimum 6 characters</span>
           </div>
 
+          <div className="flex items-start gap-2 mt-2">
+            <input
+              type="checkbox"
+              id="acceptTerms"
+              required
+              className="mt-1 accent-primary ring-0 outline-none"
+            />
+            <label htmlFor="acceptTerms" className="text-[10px] text-gray-400 leading-tight">
+              I accept the <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>, <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link> and <span className="text-gray-300">Cookie Usage</span> policy.
+            </label>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
