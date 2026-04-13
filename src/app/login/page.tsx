@@ -35,7 +35,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden" style={{
-      backgroundImage: 'linear-gradient(rgba(10, 10, 15, 0.8), rgba(10, 10, 15, 0.8)), url(/images/slavic_bg.png)',
+      backgroundImage: 'linear-gradient(rgba(10, 10, 15, 0.6), rgba(10, 10, 15, 0.6)), url(/images/slavic_bg.png)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed'

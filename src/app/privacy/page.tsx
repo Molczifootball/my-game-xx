@@ -5,7 +5,7 @@ import Link from 'next/link';
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen p-4 md:p-8 flex flex-col items-center relative overflow-hidden" style={{
-      backgroundImage: 'linear-gradient(rgba(10, 10, 15, 0.9), rgba(10, 10, 15, 0.9)), url(/images/slavic_bg.png)',
+      backgroundImage: 'linear-gradient(rgba(10, 10, 15, 0.7), rgba(10, 10, 15, 0.7)), url(/images/slavic_bg.png)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundAttachment: 'fixed'

@@ -10,7 +10,7 @@ import SidebarLeft from "@/components/SidebarLeft";
 import ChatPanel from "@/components/ChatPanel";
 
 function isPublicPath(pathname: string): boolean {
-  return pathname === "/login" || pathname === "/register" || pathname.startsWith("/api/");
+  return pathname === "/login" || pathname === "/register" || pathname === "/terms" || pathname === "/privacy" || pathname.startsWith("/api/");
 }
 
 export function GameShell({ children }: { children: React.ReactNode }) {
@@ -47,22 +47,24 @@ export function GameShell({ children }: { children: React.ReactNode }) {
   // Logged in — full game shell
   return (
     <GameProvider>
-      <div className="shrink-0 z-50 sticky top-0">
-        <Header />
-        <ResourceBar />
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="shrink-0 z-50 sticky top-0">
+          <Header />
+          <ResourceBar />
+        </div>
+        <main className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden w-full relative">
+          <SidebarLeft />
+          <section className="flex-1 min-h-0 relative overflow-hidden flex flex-col">
+            {children}
+          </section>
+        </main>
+        <ChatPanel />
+        <footer className="shrink-0 py-1.5 px-4 bg-surface-base border-t border-outline-variant flex justify-center">
+          <span className="text-[9px] text-gray-600 font-mono uppercase tracking-widest opacity-50">
+            Property of <span className="text-primary/70">Malachite Software</span> © 2026
+          </span>
+        </footer>
       </div>
-      <main className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden w-full relative">
-        <SidebarLeft />
-        <section className="flex-1 min-h-0 relative overflow-hidden flex flex-col">
-          {children}
-        </section>
-      </main>
-      <ChatPanel />
-      <footer className="shrink-0 py-1.5 px-4 bg-surface-base border-t border-outline-variant flex justify-center">
-        <span className="text-[9px] text-gray-600 font-mono uppercase tracking-widest opacity-50">
-          Property of <span className="text-primary/70">Malachite Software</span> © 2026
-        </span>
-      </footer>
     </GameProvider>
   );
 }
