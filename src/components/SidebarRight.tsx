@@ -1,11 +1,11 @@
-"use client";
-
 import { useState, useEffect } from 'react';
 import { useGame, BattleReport } from '@/context/GameContext';
 import { Units, UNIT_ATLAS, Buildings, getMaxPopulation, getCurrentPopulation, formatTime, UNIT_EMOJIS, BUILDING_META } from '@/utils/shared';
+import { useTranslation } from '@/context/LanguageContext';
 import Link from 'next/link';
 
 export default function SidebarRight() {
+  const { t } = useTranslation();
   const { state, activeVillage, getTimeRemaining, markReportAsRead } = useGame();
   const [selectedReport, setSelectedReport] = useState<BattleReport | null>(null);
   const [rosterExpanded, setRosterExpanded] = useState(false);
@@ -43,7 +43,7 @@ export default function SidebarRight() {
                 <span className="text-xl">{selectedReport.direction === 'incoming' ? '🛡️' : selectedReport.type === 'attack' ? '⚔️' : '🕵️'}</span>
                 <div>
                   <span className="text-xs font-bold text-white block">{selectedReport.targetName}</span>
-                  <span className={`text-[9px] font-bold uppercase ${selectedReport.result === 'victory' ? 'text-green-400' : selectedReport.result === 'defeat' ? 'text-red-400' : 'text-blue-400'}`}>{selectedReport.result}</span>
+                  <span className={`text-[9px] font-bold uppercase ${selectedReport.result === 'victory' ? 'text-green-400' : selectedReport.result === 'defeat' ? 'text-red-400' : 'text-blue-400'}`}>{t(`ui.${selectedReport.result}`)}</span>
                 </div>
               </div>
               <button onClick={() => setSelectedReport(null)} className="w-6 h-6 rounded bg-surface-highest flex items-center justify-center text-gray-500 hover:text-white text-xs">✕</button>
@@ -110,7 +110,7 @@ export default function SidebarRight() {
 
         {/* Army Summary */}
         <div className="px-3 py-2 border-b border-outline-variant">
-          <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest block mb-1.5">Army</span>
+          <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest block mb-1.5">{t('common.resources')}</span>
           <div className="grid grid-cols-4 gap-1.5">
             <div className="bg-black/20 rounded px-1.5 py-1 text-center">
               <span className="text-[7px] text-gray-400 block">Units</span>
@@ -125,7 +125,7 @@ export default function SidebarRight() {
               <span className="text-[10px] text-blue-400 font-mono font-bold">{totalDef > 999 ? `${(totalDef/1000).toFixed(1)}k` : totalDef}</span>
             </div>
             <div className="bg-black/20 rounded px-1.5 py-1 text-center">
-              <span className="text-[7px] text-gray-400 block">👥 Pop</span>
+              <span className="text-[7px] text-gray-400 block">👥 {t('common.population')}</span>
               <span className={`text-[10px] font-mono font-bold ${currentPop >= maxPop ? 'text-red-400' : 'text-gray-200'}`}>{currentPop}/{maxPop}</span>
             </div>
           </div>
@@ -146,7 +146,7 @@ export default function SidebarRight() {
                 return (
                   <div key={k} className={`flex items-center gap-1.5 px-1.5 py-1 rounded text-[9px] ${count > 0 ? 'bg-black/20' : 'opacity-30'}`}>
                     <span className="text-sm w-5 text-center">{UNIT_EMOJIS[k as keyof typeof UNIT_EMOJIS]}</span>
-                    <span className="text-gray-400 flex-1 truncate">{meta.name}</span>
+                    <span className="text-gray-400 flex-1 truncate">{t(`units.${k}.name`)}</span>
                     <span className={`font-mono font-bold ${count > 0 ? 'text-gray-200' : 'text-gray-400'}`}>{count}</span>
                     {inTraining > 0 && <span className="text-[8px] text-blue-400 font-mono">+{inTraining}</span>}
                   </div>
@@ -174,7 +174,9 @@ export default function SidebarRight() {
                   <div key={cmd.id} className={`bg-black/20 border border-outline-variant rounded px-2 py-1.5 border-l-2 ${isMarching ? 'border-l-red-500' : 'border-l-blue-500'}`}>
                     <div className="flex justify-between items-center text-[9px]">
                       <span className="text-gray-300 font-bold">
-                        {isMarching ? (cmd.type === 'scout' ? '🕵️ Scout' : '⚔️ Attack') : '🏕️ Return'}
+                        {isMarching 
+                          ? (cmd.type === 'scout' ? `🕵️ ${t('ui.scouted')}` : `⚔️ ${t('ui.attacker')}`) 
+                          : `🏕️ ${t('ui.returning')}`}
                       </span>
                       <span className="text-gray-500 font-mono text-[8px]">{cmd.targetX}|{cmd.targetY}</span>
                     </div>
@@ -213,7 +215,7 @@ export default function SidebarRight() {
                   <span className="text-sm">{rep.direction === 'incoming' ? '🛡️' : rep.type === 'attack' ? '⚔️' : '🕵️'}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className={`text-[9px] font-bold ${rep.result === 'victory' ? 'text-green-400' : rep.result === 'defeat' ? 'text-red-400' : 'text-blue-400'}`}>{rep.result}</span>
+                      <span className={`text-[9px] font-bold ${rep.result === 'victory' ? 'text-green-400' : rep.result === 'defeat' ? 'text-red-400' : 'text-blue-400'}`}>{t(`ui.${rep.result}`)}</span>
                       {!rep.isRead && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
                     </div>
                     <span className="text-[8px] text-gray-400 font-mono block truncate">{rep.targetName}</span>
@@ -242,7 +244,7 @@ export default function SidebarRight() {
                 return (
                   <div key={r.id} className={`flex items-center gap-1.5 px-2 py-1 rounded border-l-2 bg-black/20 ${isFirst ? 'border-l-green-500' : 'border-l-gray-700'}`}>
                     <span className="text-sm">{UNIT_EMOJIS[r.unit as keyof typeof UNIT_EMOJIS]}</span>
-                    <span className="text-[9px] text-gray-400 flex-1 truncate">{UNIT_ATLAS[r.unit].name}</span>
+                    <span className="text-[9px] text-gray-400 flex-1 truncate">{t(`units.${r.unit}.name`)}</span>
                     <span className={`font-mono text-[9px] font-bold ${isFirst ? 'text-green-400' : 'text-gray-500'}`}>{formatTime(remaining)}</span>
                   </div>
                 );

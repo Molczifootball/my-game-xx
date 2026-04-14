@@ -7,10 +7,12 @@ import {
   Buildings, getProductionRate, UNIT_ATLAS, Units, BUILDING_REQUIREMENTS, 
   getMaxPopulation, getCurrentPopulation, BUILDING_META, formatTime 
 } from '@/utils/shared';
+import { useTranslation } from '@/context/LanguageContext';
 
 const BUILDING_ORDER: (keyof Buildings)[] = ['headquarters', 'barracks', 'stable', 'castle', 'palace', 'cityWall', 'timberCamp', 'ironMine', 'clayPit', 'warehouse', 'farm', 'granary', 'huntersLodge', 'fishery', 'residence'];
 
 export default function Home() {
+  const { t } = useTranslation();
   const { state, activeVillage, upgradeBuilding, recruitUnit, MAX_LEVELS } = useGame();
   const [selectedBuilding, setSelectedBuilding] = useState<keyof Buildings | null>(null);
   const [, setForceRender] = useState(0);
@@ -80,17 +82,17 @@ export default function Home() {
           
           <div className="h-32 w-full bg-[#111] relative border-b border-[#333] shrink-0">
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-black"></div>
-            <Image src={meta.image} alt={meta.name} fill sizes="600px" quality={100} className="object-cover opacity-90 mix-blend-screen" priority />
+            <Image src={meta.image} alt={t(`buildings.${selectedBuilding}.name`)} fill sizes="600px" quality={100} className="object-cover opacity-90 mix-blend-screen" priority />
             <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-[#1a1a1b] to-transparent h-16"></div>
-            <h2 className="absolute bottom-3 left-5 text-xl font-bold text-white medieval-font drop-shadow-md">{meta.name}</h2>
+            <h2 className="absolute bottom-3 left-5 text-xl font-bold text-white medieval-font drop-shadow-md">{t(`buildings.${selectedBuilding}.name`)}</h2>
           </div>
 
           <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
-            <p className="text-gray-400 text-xs mb-3 leading-relaxed bg-[#111] p-2 rounded">{meta.desc}</p>
+            <p className="text-gray-400 text-xs mb-3 leading-relaxed bg-[#111] p-2 rounded">{t(`buildings.${selectedBuilding}.desc`)}</p>
 
             <div className="flex justify-between items-center mb-3">
               <div>
-                <span className="text-on-surface-variant font-bold medieval-font tracking-widest text-[#ffc63e] text-sm">Level {level}</span>
+                <span className="text-on-surface-variant font-bold medieval-font tracking-widest text-[#ffc63e] text-sm">{t('common.level')} {level}</span>
                 {queuedForBuilding > 0 && <span className="text-emerald-500 ml-2 animate-pulse text-[9px] font-bold uppercase tracking-widest">+{queuedForBuilding}</span>}
               </div>
               <div className="text-[9px] font-bold text-on-surface-variant/40 uppercase tracking-wider">Max {maxLevel}</div>
@@ -107,7 +109,7 @@ export default function Home() {
                       return (
                         <div key={`${r.requires}-${r.level}`} className="flex items-center gap-2 text-[11px]">
                           <span className={met ? 'text-green-400' : 'text-red-400'}>{met ? '✓' : '✗'}</span>
-                          <span className={met ? 'text-gray-400' : 'text-red-400'}>{BUILDING_META[r.requires].name} Lv.{r.level}</span>
+                          <span className={met ? 'text-gray-400' : 'text-red-400'}>{t(`buildings.${r.requires}.name`)} {t('common.level')} {r.level}</span>
                           {!met && <span className="text-[9px] text-gray-600 font-mono">(current: {vBuildings[r.requires] || 0})</span>}
                         </div>
                       );
@@ -126,7 +128,7 @@ export default function Home() {
                 <>
                   <div className="flex flex-col gap-1 mb-4">
                     <div className="flex justify-between">
-                      <span className="text-sm text-amber-500 font-bold">Upgrade to Level {targetLevel}:</span>
+                      <span className="text-sm text-amber-500 font-bold">Upgrade to {t('common.level')} {targetLevel}:</span>
                       <span className="text-sm font-mono text-gray-400">⏱️ {formatTime(timeSecs)}</span>
                     </div>
                     <div className="text-gray-400 text-xs italic">
@@ -196,8 +198,8 @@ export default function Home() {
                         <div key={unitKey} className={`bg-[#1e1e1e] border border-[#555] rounded px-3 py-2 ${!canRecruit ? 'opacity-30' : ''}`}>
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-gray-300 font-bold text-sm">
-                              {data.name}
-                              {!canRecruit && <span className="text-red-500 text-[10px] uppercase ml-2">(Req Lv.{data.reqLvl})</span>}
+                              {t(`units.${unitKey}.name`)}
+                              {!canRecruit && <span className="text-red-500 text-[10px] uppercase ml-2">(Req {t('common.level')} {data.reqLvl})</span>}
                             </span>
                             <span className="text-[9px] text-gray-600 font-mono">
                               {data.pop} pop | {data.grain > 0 ? `🌾${data.grain}` : data.fish > 0 ? `🐟${data.fish}` : `🥩${data.meat}`}/h
@@ -293,6 +295,7 @@ export default function Home() {
 
 // Sub-component for buildings on the map
 function MapNode({ id, x, y, activeVillage, MAX_LEVELS, isQueued, isLocked, onClick }: any) {
+  const { t } = useTranslation();
   const meta = BUILDING_META[id as keyof Buildings];
   const level = activeVillage.buildings[id];
   const maxLevel = MAX_LEVELS[id];
@@ -321,7 +324,7 @@ function MapNode({ id, x, y, activeVillage, MAX_LEVELS, isQueued, isLocked, onCl
       `}>
         <h3 className={`font-bold text-[8px] sm:text-[9px] uppercase tracking-wider whitespace-nowrap
           ${isLocked && isZero ? 'text-red-400/50' : isQueued ? 'text-emerald-300' : 'text-white/90 group-hover:text-primary'}
-        `}>{meta.name}</h3>
+        `}>{t(`buildings.${id}.name`)}</h3>
         {isLocked && isZero ? (
           <div className="text-[7px] text-red-400/40 font-bold">LOCKED</div>
         ) : isZero ? (

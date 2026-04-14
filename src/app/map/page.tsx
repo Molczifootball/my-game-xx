@@ -52,8 +52,8 @@ export default function WorldMap() {
     const qx = searchParams.get('x');
     const qy = searchParams.get('y');
     if (qx && qy) {
-      setCenterX(Math.max(1, Math.min(50, parseInt(qx, 10))));
-      setCenterY(Math.max(1, Math.min(50, parseInt(qy, 10))));
+      setCenterX(Math.max(1, Math.min(100, parseInt(qx, 10))));
+      setCenterY(Math.max(1, Math.min(100, parseInt(qy, 10))));
     } else if (currentActive) {
       setCenterX(currentActive.x);
       setCenterY(currentActive.y);
@@ -158,7 +158,7 @@ export default function WorldMap() {
       if (v && v > 0) {
         hasUnits = true;
         const speed = UNIT_ATLAS[k as keyof Units].speed;
-        if (speed > slowestSpeed) { slowestSpeed = speed; slowestUnit = UNIT_ATLAS[k as keyof Units].name; }
+        if (speed > slowestSpeed) { slowestSpeed = speed; slowestUnit = k.charAt(0).toUpperCase() + k.slice(1); }
       }
     });
     const duration = hasUnits ? calculateTravelDuration(dist, slowestSpeed) : 0;
@@ -504,7 +504,7 @@ export default function WorldMap() {
                       <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold block mb-2">Garrison</span>
                       <div className="grid grid-cols-3 gap-1">
                         {Object.entries(activeVillage.units).filter(([, v]) => (v as number) > 0).map(([u, v]) => (
-                          <div key={u} className="flex items-center gap-1" title={UNIT_ATLAS[u as keyof Units].name}>
+                          <div key={u} className="flex items-center gap-1" title={u.charAt(0).toUpperCase() + u.slice(1)}>
                             <span className="text-xs">{UNIT_EMOJIS[u]}</span>
                             <span className="text-[10px] text-gray-300 font-mono">{v as number}</span>
                           </div>
@@ -595,7 +595,7 @@ export default function WorldMap() {
                           <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center gap-2">
                               <span className="text-base">{UNIT_EMOJIS[u]}</span>
-                              <span className="text-[10px] text-white font-bold uppercase tracking-wider">{atlas.name}</span>
+                              <span className="text-[10px] text-white font-bold uppercase tracking-wider">{u.charAt(0).toUpperCase() + u.slice(1)}</span>
                             </div>
                             <span className="text-[10px] text-gray-500 font-mono">{c}</span>
                           </div>

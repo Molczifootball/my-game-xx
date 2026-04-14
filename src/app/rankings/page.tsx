@@ -2,6 +2,7 @@
 
 import { useGame } from '@/context/GameContext';
 import { useState, useMemo } from 'react';
+import { useTranslation } from '@/context/LanguageContext';
 import PlayerContextMenu from '@/components/PlayerContextMenu';
 import { useRouter } from 'next/navigation';
 
@@ -15,6 +16,7 @@ interface PlayerEntry {
 }
 
 export default function RankingsPage() {
+  const { t } = useTranslation();
   const { state } = useGame();
   const router = useRouter();
   const [sortBy, setSortBy] = useState<SortKey>('points');
@@ -69,9 +71,9 @@ export default function RankingsPage() {
       {/* Header */}
       <div className="shrink-0 px-6 py-4 border-b border-outline-variant bg-surface-low">
         <div className="flex justify-between items-center mb-3">
-          <h1 className="text-lg text-white font-bold medieval-font tracking-widest uppercase">World Rankings</h1>
+          <h1 className="text-lg text-white font-bold medieval-font tracking-widest uppercase">{t('ui.rankings')}</h1>
           <div className="flex items-center gap-3">
-            <span className="text-[9px] text-gray-500 font-mono">{leaderboard.length} players</span>
+            <span className="text-[9px] text-gray-500 font-mono">{leaderboard.length} {t('common.army')}</span>
           </div>
         </div>
 
@@ -80,17 +82,17 @@ export default function RankingsPage() {
           <div className="flex items-center gap-4 bg-primary/5 border border-primary/20 rounded px-4 py-2 mb-3">
             <span className="text-2xl">{yourRank === 1 ? '🥇' : yourRank === 2 ? '🥈' : yourRank === 3 ? '🥉' : '🏰'}</span>
             <div>
-              <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Your Rank</span>
+              <span className="text-[10px] text-gray-500 uppercase tracking-widest block">{t('ui.rankings')}</span>
               <span className="text-primary font-mono font-bold text-lg">#{yourRank}</span>
             </div>
             <div className="w-px h-8 bg-outline-variant" />
             <div>
-              <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Points</span>
+              <span className="text-[10px] text-gray-500 uppercase tracking-widest block">{t('common.points')}</span>
               <span className="text-white font-mono font-bold">{youEntry.totalPoints.toLocaleString()}</span>
             </div>
             <div className="w-px h-8 bg-outline-variant" />
             <div>
-              <span className="text-[10px] text-gray-500 uppercase tracking-widest block">Villages</span>
+              <span className="text-[10px] text-gray-500 uppercase tracking-widest block">{t('ui.village')}s</span>
               <span className="text-white font-mono font-bold">{youEntry.villageCount}</span>
             </div>
           </div>
@@ -109,7 +111,7 @@ export default function RankingsPage() {
                     : 'border-outline-variant text-gray-500 hover:text-primary hover:border-primary/30'
                   }`}
               >
-                {key === 'points' ? 'Points' : key === 'villages' ? 'Villages' : 'Name'}
+                {key === 'points' ? t('common.points') : key === 'villages' ? t('ui.village') : t('ui.village')}
               </button>
             ))}
           </div>
@@ -119,7 +121,7 @@ export default function RankingsPage() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search player..."
+              placeholder="Search..."
               className="w-full bg-black/30 border border-outline-variant rounded px-3 py-1.5 text-[10px] text-gray-300 font-mono placeholder-gray-600 outline-none focus:border-primary/40 transition-colors"
             />
             {search && (
@@ -134,14 +136,14 @@ export default function RankingsPage() {
         {/* Header row */}
         <div className="sticky top-0 bg-surface-base/95 backdrop-blur-sm grid grid-cols-[40px_1fr_80px_100px] gap-2 px-6 py-2 text-[9px] font-bold uppercase tracking-widest text-gray-600 border-b border-outline-variant z-10">
           <span>#</span>
-          <span>Player</span>
-          <span className="text-right">Villages</span>
-          <span className="text-right">Points</span>
+          <span>{t('ui.defender')}</span>
+          <span className="text-right">{t('ui.village')}s</span>
+          <span className="text-right">{t('common.points')}</span>
         </div>
 
         {filtered.length === 0 ? (
           <div className="py-16 text-center text-gray-600 text-[10px] uppercase tracking-widest">
-            No players found.
+            {t('common.empty')}
           </div>
         ) : (
           <div className="px-6 py-1">
@@ -167,7 +169,7 @@ export default function RankingsPage() {
                       {entry.owner}
                     </button>
                     {entry.isYou && (
-                      <span className="text-[8px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-bold uppercase shrink-0">You</span>
+                      <span className="text-[8px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-bold uppercase shrink-0">{t('ui.village')}</span>
                     )}
                   </div>
 

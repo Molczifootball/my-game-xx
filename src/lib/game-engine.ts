@@ -9,6 +9,7 @@ export interface UpgradeEntry {
   building: keyof Buildings;
   targetLevel: number;
   completesAt: number; // Unix timestamp ms
+  durationMs: number; // Planned duration in ms
 }
 
 export interface ProcessedTile {

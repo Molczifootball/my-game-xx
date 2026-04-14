@@ -1,15 +1,15 @@
-"use client";
-
 import { useGame } from '@/context/GameContext';
 import { 
   getProductionRate, getGrainProduction, getMeatProduction, getFishProduction, 
   getFoodUpkeep, getGranaryCapacity, getMaxPopulation, getCurrentPopulation, 
   Units, UNIT_ATLAS, Buildings, formatTime, BUILDING_META, calculatePoints, UNIT_EMOJIS 
 } from '@/utils/shared';
+import { useTranslation } from '@/context/LanguageContext';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 export default function SidebarLeft() {
+  const { t } = useTranslation();
   const { state, activeVillage, getTimeRemaining, renameVillage, markReportAsRead } = useGame();
 
   const [, setForceRender] = useState(0);
@@ -100,41 +100,47 @@ export default function SidebarLeft() {
       </div>
 
       {/* ── MATERIALS ── */}
-      <Section title="Materials" right={`📦 ${capacity.toLocaleString()}`} open={showMaterials} toggle={() => setShowMaterials(!showMaterials)}>
-        <ResourceRow icon="🪵" label="Wood" value={currentWood} rate={rateWood} capacity={capacity} color="#c4813a" />
-        <ResourceRow icon="🧱" label="Clay" value={currentClay} rate={rateClay} capacity={capacity} color="#e06840" />
-        <ResourceRow icon="⛏️" label="Iron" value={currentIron} rate={rateIron} capacity={capacity} color="#b0bcc9" />
+      <Section title={t('common.resources')} right={`📦 ${capacity.toLocaleString()}`} open={showMaterials} toggle={() => setShowMaterials(!showMaterials)}>
+        <ResourceRow icon="🪵" label={t('common.wood')} value={currentWood} rate={rateWood} capacity={capacity} color="#c4813a" />
+        <ResourceRow icon="🧱" label={t('common.clay')} value={currentClay} rate={rateClay} capacity={capacity} color="#e06840" />
+        <ResourceRow icon="⛏️" label={t('common.iron')} value={currentIron} rate={rateIron} capacity={capacity} color="#b0bcc9" />
       </Section>
 
       {/* ── FOOD ── */}
       <Section title="Food Supply" right={`🏪 ${granaryCap.toLocaleString()}`} open={showFood} toggle={() => setShowFood(!showFood)}>
-        <ResourceRow icon="🌾" label="Grain" value={currentGrain} rate={netGrain} capacity={granaryCap} color="#d4a843" isStarving={isStarvingGrain} />
-        <ResourceRow icon="🐟" label="Fish" value={currentFish} rate={netFish} capacity={granaryCap} color="#5a9ec5" isStarving={isStarvingFish} />
-        <ResourceRow icon="🥩" label="Meat" value={currentMeat} rate={netMeat} capacity={granaryCap} color="#c55a5a" isStarving={isStarvingMeat} />
+        <ResourceRow icon="🌾" label={t('common.grain')} value={currentGrain} rate={netGrain} capacity={granaryCap} color="#d4a843" isStarving={isStarvingGrain} />
+        <ResourceRow icon="🐟" label={t('common.fish')} value={currentFish} rate={netFish} capacity={granaryCap} color="#5a9ec5" isStarving={isStarvingFish} />
+        <ResourceRow icon="🥩" label={t('common.meat')} value={currentMeat} rate={netMeat} capacity={granaryCap} color="#c55a5a" isStarving={isStarvingMeat} />
       </Section>
 
       {/* ── BUILD QUEUE ── */}
-      <Section title="Build Queue" right={`${vUpgrades.length}/3`} rightColor={vUpgrades.length >= 3 ? 'text-red-400' : undefined} open={showQueue} toggle={() => setShowQueue(!showQueue)}>
+      <Section title={t('ui.build_queue')} right={`${vUpgrades.length}/3`} rightColor={vUpgrades.length >= 3 ? 'text-red-400' : undefined} open={showQueue} toggle={() => setShowQueue(!showQueue)}>
         {vUpgrades.length === 0 ? (
-          <div className="text-gray-500 text-[9px] text-center py-3 border border-dashed border-outline-variant rounded font-bold">Empty</div>
+          <div className="text-gray-500 text-[9px] text-center py-3 border border-dashed border-outline-variant rounded font-bold">{t('ui.empty')}</div>
         ) : (
           <div className="flex flex-col gap-1.5">
             {vUpgrades.map((u, idx) => {
               const remaining = getTimeRemaining(u.completesAt);
               const isFirst = idx === 0;
+              // Use durationMs if available, else fallback to a reasonable default based on level (legacy support)
+              const totalDuration = u.durationMs || 30000;
+              const progress = isFirst ? Math.max(0, Math.min(100, (1 - (remaining * 1000 / totalDuration)) * 100)) : 0;
+              
               return (
                 <div key={u.id} className={`bg-black/20 border border-outline-variant rounded px-2 py-1.5 border-l-2 ${isFirst ? 'border-l-green-500' : 'border-l-gray-700'}`}>
                   <div className="flex justify-between items-center text-[9px]">
-                    <span className="text-gray-300 font-bold truncate">{BUILDING_META[u.building].name}</span>
-                    <span className="text-primary font-mono text-[8px]">Lv.{u.targetLevel}</span>
+                    <span className="text-gray-300 font-bold truncate">{t(`buildings.${u.building}.name`)}</span>
+                    <span className="text-primary font-mono text-[8px]">{t('common.level')} {u.targetLevel}</span>
                   </div>
                   <div className="flex justify-between items-center text-[8px] mt-0.5">
-                    <span className={isFirst ? 'text-green-400' : 'text-gray-500'}>{isFirst ? 'Building' : 'Queued'}</span>
-                    <span className={`font-mono ${isFirst ? 'text-white' : 'text-gray-500'}`}>{formatTime(remaining)}</span>
+                    <span className={isFirst ? 'text-green-400' : 'text-gray-500'}>{isFirst ? t('ui.building_now') : t('ui.queued')}</span>
+                    <span className={`font-mono ${isFirst ? 'text-white' : 'text-gray-500'}`}>
+                      {isFirst ? formatTime(remaining) : formatTime(Math.floor(totalDuration / 1000))}
+                    </span>
                   </div>
                   {isFirst && (
                     <div className="mt-1 h-[2px] bg-black/40 rounded-full overflow-hidden">
-                      <div className="h-full bg-green-500/60 rounded-full animate-pulse" style={{ width: `${Math.max(5, Math.min(100, 100 - (remaining / 60) * 100))}%` }} />
+                      <div className="h-full bg-green-500/60 rounded-full" style={{ width: `${progress}%` }} />
                     </div>
                   )}
                 </div>
@@ -145,7 +151,7 @@ export default function SidebarLeft() {
       </Section>
 
       {/* ── ARMY ── */}
-      <Section title="Army" right={`⚔️${totalAtk > 999 ? `${(totalAtk/1000).toFixed(1)}k` : totalAtk} 🛡️${totalDef > 999 ? `${(totalDef/1000).toFixed(1)}k` : totalDef}`} open={showArmy} toggle={() => setShowArmy(!showArmy)}>
+      <Section title={t('common.army')} right={`⚔️${totalAtk > 999 ? `${(totalAtk/1000).toFixed(1)}k` : totalAtk} 🛡️${totalDef > 999 ? `${(totalDef/1000).toFixed(1)}k` : totalDef}`} open={showArmy} toggle={() => setShowArmy(!showArmy)}>
         <div className="flex flex-col gap-0.5">
           {Object.entries(UNIT_ATLAS).map(([k, meta]) => {
             const count = (vUnits[k as keyof Units] as number) || 0;
@@ -153,7 +159,7 @@ export default function SidebarLeft() {
             return (
               <div key={k} className={`flex items-center gap-1.5 px-1.5 py-1 rounded text-[9px] ${count > 0 ? 'bg-black/20' : 'opacity-30'}`}>
                 <span className="text-sm w-5 text-center">{UNIT_EMOJIS[k as keyof typeof UNIT_EMOJIS]}</span>
-                <span className="text-gray-400 flex-1 truncate">{meta.name}</span>
+                <span className="text-gray-400 flex-1 truncate">{t(`units.${k}.name`)}</span>
                 <span className={`font-mono font-bold ${count > 0 ? 'text-gray-200' : 'text-gray-500'}`}>{count}</span>
                 {inTraining > 0 && <span className="text-[8px] text-blue-400 font-mono">+{inTraining}</span>}
               </div>
@@ -163,9 +169,9 @@ export default function SidebarLeft() {
       </Section>
 
       {/* ── TRAINING ── */}
-      <Section title="Training" right={`${vRecruitment.length}`} open={showTraining} toggle={() => setShowTraining(!showTraining)}>
+      <Section title={t('common.training')} right={`${vRecruitment.length}`} open={showTraining} toggle={() => setShowTraining(!showTraining)}>
         {vRecruitment.length === 0 ? (
-          <div className="text-gray-500 text-[9px] text-center py-3 border border-dashed border-outline-variant rounded font-bold">Idle</div>
+          <div className="text-gray-500 text-[9px] text-center py-3 border border-dashed border-outline-variant rounded font-bold">{t('common.idle')}</div>
         ) : (
           <div className="flex flex-col gap-1">
             {vRecruitment.map((r, idx) => {
@@ -174,7 +180,7 @@ export default function SidebarLeft() {
               return (
                 <div key={r.id} className={`flex items-center gap-1.5 px-2 py-1 rounded border-l-2 bg-black/20 ${isFirst ? 'border-l-green-500' : 'border-l-gray-700'}`}>
                   <span className="text-sm">{UNIT_EMOJIS[r.unit as keyof typeof UNIT_EMOJIS]}</span>
-                  <span className="text-[9px] text-gray-400 flex-1 truncate">{UNIT_ATLAS[r.unit].name}</span>
+                  <span className="text-[9px] text-gray-400 flex-1 truncate">{t(`units.${r.unit}.name`)}</span>
                   <span className={`font-mono text-[9px] font-bold ${isFirst ? 'text-green-400' : 'text-gray-500'}`}>{formatTime(remaining)}</span>
                 </div>
               );
@@ -190,20 +196,20 @@ export default function SidebarLeft() {
         const incomingAttacks = state.activeCommands.filter(cmd => !playerVillageIds.has(`${cmd.originX}|${cmd.originY}`) && cmd.status === 'marching' && playerVillageIds.has(`${cmd.targetX}|${cmd.targetY}`));
         return (
         <>
-        <Section title="Deployments" right={`${myCommands.length}`} open={showDeployments} toggle={() => setShowDeployments(!showDeployments)}>
+        <Section title={t('common.deployments')} right={`${myCommands.length}`} open={showDeployments} toggle={() => setShowDeployments(!showDeployments)}>
         {myCommands.length === 0 ? (
-          <div className="text-gray-500 text-[9px] text-center py-3 border border-dashed border-outline-variant rounded font-bold">None</div>
+          <div className="text-gray-500 text-[9px] text-center py-3 border border-dashed border-outline-variant rounded font-bold">{t('common.none')}</div>
         ) : (
           <div className="flex flex-col gap-1.5">
             {myCommands.map((cmd) => {
               const isMarching = cmd.status === 'marching';
               const remaining = getTimeRemaining(isMarching ? cmd.arrivesAt : cmd.returnsAt);
               return (
-                <div key={cmd.id} className={`bg-black/20 border border-outline-variant rounded px-2 py-1.5 border-l-2 ${isMarching ? 'border-l-red-500' : 'border-l-blue-500'}`}>
-                  <div className="flex justify-between items-center text-[9px]">
-                    <span className="text-gray-300 font-bold">{isMarching ? (cmd.type === 'scout' ? '🕵️ Scout' : '⚔️ Attack') : '🏕️ Return'}</span>
-                    <span className="text-gray-400 font-mono text-[8px]">{cmd.targetX}|{cmd.targetY}</span>
-                  </div>
+                  <div key={cmd.id} className={`bg-black/20 border border-outline-variant rounded px-2 py-1.5 border-l-2 ${isMarching ? 'border-l-red-500' : 'border-l-blue-500'}`}>
+                    <div className="flex justify-between items-center text-[9px]">
+                      <span className="text-gray-300 font-bold">{isMarching ? (cmd.type === 'scout' ? `🕵️ ${t('ui.scouted')}` : `⚔️ ${t('ui.attacker')}`) : `🏕️ ${t('ui.returning')}`}</span>
+                      <span className="text-gray-400 font-mono text-[8px]">{cmd.targetX}|{cmd.targetY}</span>
+                    </div>
                   <div className="flex justify-between items-center mt-0.5">
                     <span className="text-primary font-mono font-bold text-xs">{formatTime(remaining)}</span>
                     {!isMarching && (cmd.loot.wood + cmd.loot.clay + cmd.loot.iron) > 0 && (
@@ -219,14 +225,14 @@ export default function SidebarLeft() {
 
       {/* ── INCOMING ATTACKS ── */}
       {incomingAttacks.length > 0 && (
-        <Section title="⚠️ Incoming" right={`${incomingAttacks.length}`} rightColor="text-red-400" open={true} toggle={() => {}}>
+        <Section title={`⚠️ ${t('common.incoming')}`} right={`${incomingAttacks.length}`} rightColor="text-red-400" open={true} toggle={() => {}}>
           <div className="flex flex-col gap-1.5">
             {incomingAttacks.map((cmd) => {
               const remaining = getTimeRemaining(cmd.arrivesAt);
               return (
                 <div key={cmd.id} className="bg-red-900/15 border border-red-500/30 rounded px-2 py-1.5 border-l-2 border-l-red-500 animate-pulse">
                   <div className="flex justify-between items-center text-[9px]">
-                    <span className="text-red-400 font-bold">⚔️ Attack incoming!</span>
+                    <span className="text-red-400 font-bold">⚔️ {t('ui.attackIncoming')}</span>
                     <span className="text-gray-400 font-mono text-[8px]">→ {cmd.targetX}|{cmd.targetY}</span>
                   </div>
                   <div className="flex justify-between items-center mt-0.5">
@@ -244,9 +250,9 @@ export default function SidebarLeft() {
       })()}
 
       {/* ── REPORTS ── */}
-      <Section title="Reports" right={<Link href="/reports" className="text-[8px] text-primary font-bold hover:underline">All</Link>} open={showReports} toggle={() => setShowReports(!showReports)}>
+      <Section title={t('common.reports')} right={<Link href="/reports" className="text-[8px] text-primary font-bold hover:underline">{t('common.all')}</Link>} open={showReports} toggle={() => setShowReports(!showReports)}>
         {state.reports.length === 0 ? (
-          <div className="text-gray-500 text-[9px] text-center py-3 border border-dashed border-outline-variant rounded font-bold">Empty</div>
+          <div className="text-gray-500 text-[9px] text-center py-3 border border-dashed border-outline-variant rounded font-bold">{t('common.empty')}</div>
         ) : (
           <div className="flex flex-col gap-1">
             {state.reports.slice(0, 3).map((rep) => (
@@ -260,7 +266,7 @@ export default function SidebarLeft() {
                 <span className="text-sm">{rep.direction === 'incoming' ? '🛡️' : rep.type === 'attack' ? '⚔️' : '🕵️'}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className={`text-[9px] font-bold ${rep.result === 'victory' ? 'text-green-400' : rep.result === 'defeat' ? 'text-red-400' : 'text-blue-400'}`}>{rep.result}</span>
+                    <span className={`text-[9px] font-bold ${rep.result === 'victory' ? 'text-green-400' : rep.result === 'defeat' ? 'text-red-400' : 'text-blue-400'}`}>{t(`ui.${rep.result}`)}</span>
                     {!rep.isRead && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
                   </div>
                   <span className="text-[8px] text-gray-400 font-mono block truncate">{rep.targetName}</span>

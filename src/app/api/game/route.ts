@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/db';
 import { auth as nextAuth } from '@/lib/auth';
 import { calculateTileState, resolveBattle, UpgradeEntry } from '@/lib/game-engine';
-import { Buildings, Resources, Units, getBuildCost, getBuildDuration, MAX_LEVELS } from '@/utils/shared';
+import { Buildings, Resources, Units, getBuildCost, getBuildDuration, MAX_LEVELS, calculatePoints } from '@/utils/shared';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,13 +58,41 @@ export async function GET(req: NextRequest) {
     const userId = session.user.id;
     const playerName = session.user.name || 'Player';
 
-    // 1. Get player's village(s)
+    // 1. Get player's village(s) and full profile (Clan + Premium)
+    let user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        clan: {
+          include: {
+            members: {
+              select: { id: true, name: true, clanRole: true, villages: { select: { buildings: true } } }
+            }
+          }
+        }
+      }
+    });
+
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
     let villages = await prisma.worldTile.findMany({ where: { ownerId: userId } });
 
     // 2. If no village, spawn the player
     if (villages.length === 0) {
       const newVillage = await spawnPlayer(prisma, userId, playerName);
       villages = [newVillage];
+      // Refresh user to include new village for point calculations etc
+      user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          clan: {
+            include: {
+              members: {
+                select: { id: true, name: true, clanRole: true, villages: { select: { buildings: true } } }
+              }
+            }
+          }
+        }
+      });
     }
 
     // 3. Process each village (Lazy Update — flush upgrade queue + resources)
@@ -226,13 +254,27 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' }
     });
 
+    // 8. Prepare clan data
+    const clanData = user?.clan ? {
+      ...user.clan,
+      members: user.clan.members.map((m: any) => ({
+        id: m.id,
+        name: m.name,
+        role: m.clanRole,
+        points: m.villages.reduce((acc: number, v: any) => acc + calculatePoints(v.buildings || {}), 0)
+      }))
+    } : null;
+
     return NextResponse.json({
       playerName,
-      activeVillageId: `${first.x}|${first.y}`,
+      activeVillageId: villages[0] ? `${villages[0].x}|${villages[0].y}` : `25|25`,
       villages: processedVillages,
       worldMap,
       commands,
-      reports
+      reports,
+      clan: clanData,
+      premiumUntil: user?.premiumUntil,
+      notes: user?.notes
     });
   } catch (error) {
     console.error('Failed to load multiplayer session:', error);
@@ -264,9 +306,13 @@ export async function POST(req: NextRequest) {
         tile.units as Units, tile.updatedAt, false, existingUpgrades
       );
 
-      // Queue cap: 3 pending upgrades max
-      if (state.upgrades.length >= 3) {
-        return NextResponse.json({ error: 'Build queue full (max 3)' }, { status: 400 });
+      // Queue cap: 3 (standard) or 5 (premium)
+      const userProf = await prisma.user.findUnique({ where: { id: userId }, select: { premiumUntil: true } });
+      const isPremium = userProf?.premiumUntil && new Date(userProf.premiumUntil) > new Date();
+      const maxQueue = isPremium ? 5 : 3;
+
+      if (state.upgrades.length >= maxQueue) {
+        return NextResponse.json({ error: `Build queue full (max ${maxQueue})` }, { status: 400 });
       }
 
       // Calculate virtual level based on actual level + queued upgrades of this type
@@ -298,6 +344,7 @@ export async function POST(req: NextRequest) {
         building: building as keyof Buildings,
         targetLevel: currentLevel + 1,
         completesAt,
+        durationMs,
       };
       const newUpgrades = [...state.upgrades, newUpgrade];
 
@@ -435,6 +482,117 @@ export async function POST(req: NextRequest) {
       const merged: any = { ...existing };
       Object.entries(units).forEach(([u, c]) => { merged[u] = (merged[u] || 0) + (c as number); });
       await prisma.worldTile.update({ where: { id: tile.id }, data: { units: merged, updatedAt: new Date() } });
+      return NextResponse.json({ success: true });
+    }
+
+    // ── CREATE CLAN ──────────────────────────────────────────────────────────
+    if (action === 'create_clan') {
+      const { name, tag } = payload;
+      // Basic validation
+      if (name.length < 3 || tag.length < 2) return NextResponse.json({ error: 'Name/Tag too short' }, { status: 400 });
+
+      // Check for existing
+      const existing = await prisma.clan.findFirst({
+        where: { OR: [{ name }, { tag }] }
+      });
+      if (existing) return NextResponse.json({ error: 'Clan name or tag already taken' }, { status: 400 });
+
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (user?.clanId) return NextResponse.json({ error: 'Already in a clan' }, { status: 400 });
+
+      await prisma.clan.create({
+        data: {
+          name,
+          tag: tag.toUpperCase(),
+          ownerId: userId,
+          members: { connect: { id: userId } }
+        }
+      });
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: { clanRole: 'OWNER' }
+      });
+
+      return NextResponse.json({ success: true });
+    }
+
+    // ── INVEST IN CLAN ───────────────────────────────────────────────────────
+    if (action === 'invest_clan') {
+      const { resources } = payload;
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { clan: true }
+      });
+      if (!user?.clanId) return NextResponse.json({ error: 'Not in a clan' }, { status: 400 });
+
+      const village = await prisma.worldTile.findFirst({ where: { ownerId: userId } });
+      if (!village) return NextResponse.json({ error: 'No village' }, { status: 400 });
+
+      const vRes = village.resources as any;
+      const investWood = Math.min(vRes.wood, resources.wood || 0);
+      const investClay = Math.min(vRes.clay, resources.clay || 0);
+      const investIron = Math.min(vRes.iron, resources.iron || 0);
+      const totalInvested = investWood + investClay + investIron;
+
+      if (totalInvested <= 0) return NextResponse.json({ error: 'Nothing to invest' }, { status: 400 });
+
+      // Deduct from village
+      await prisma.worldTile.update({
+        where: { id: village.id },
+        data: {
+          resources: {
+            ...vRes,
+            wood: vRes.wood - investWood,
+            clay: vRes.clay - investClay,
+            iron: vRes.iron - investIron
+          }
+        }
+      });
+
+      // Add to clan experience
+      await prisma.clan.update({
+        where: { id: user.clanId },
+        data: {
+          experience: { increment: totalInvested },
+          level: Math.floor(Math.sqrt((user.clan!.experience + totalInvested) / 5000)) + 1 // Simple leveling math
+        }
+      });
+
+      await prisma.clanInvestment.create({
+        data: {
+          clanId: user.clanId,
+          userId,
+          wood: investWood,
+          clay: investClay,
+          iron: investIron
+        }
+      });
+
+      return NextResponse.json({ success: true });
+    }
+
+    // ── UPDATE NOTES ─────────────────────────────────────────────────────────
+    if (action === 'update_notes') {
+      const { notes } = payload;
+      await prisma.user.update({
+        where: { id: userId },
+        data: { notes }
+      });
+      return NextResponse.json({ success: true });
+    }
+
+    // ── BUY PREMIUM ──────────────────────────────────────────────────────────
+    if (action === 'buy_premium') {
+      const duration = 30 * 24 * 60 * 60 * 1000; // 30 days
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      const currentEnd = user?.premiumUntil && user.premiumUntil > new Date() ? user.premiumUntil : new Date();
+      const newEnd = new Date(currentEnd.getTime() + duration);
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: { premiumUntil: newEnd }
+      });
       return NextResponse.json({ success: true });
     }
 

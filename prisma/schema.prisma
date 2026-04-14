@@ -25,6 +25,14 @@ model User {
   chatMessages  ChatMessage[]
   bugReports    BugReport[]
   battleReports BattleReport[]
+  
+  // Clans & Premium
+  clanId        String?
+  clanRole      String?   // 'OWNER', 'OFFICER', 'MEMBER'
+  clan          Clan?     @relation(fields: [clanId], references: [id])
+  premiumUntil  DateTime?
+  notes         String?   @db.Text
+  investments   ClanInvestment[]
 }
 
 model Account {
@@ -120,8 +128,35 @@ model ChatMessage {
   content    String
   authorId   String
   authorName String
+  channelId  String   @default("global") // global, clan:[id]
   createdAt  DateTime @default(now())
   user       User     @relation(fields: [authorId], references: [id])
+}
+
+model Clan {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  tag         String   @unique
+  description String?
+  level       Int      @default(1)
+  experience  Int      @default(0) // Total resources invested
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  members     User[]
+  investments ClanInvestment[]
+}
+
+model ClanInvestment {
+  id        String   @id @default(cuid())
+  clanId    String
+  userId    String
+  wood      Int      @default(0)
+  clay      Int      @default(0)
+  iron      Int      @default(0)
+  createdAt DateTime @default(now())
+  clan      Clan     @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // Bug reports

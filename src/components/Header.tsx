@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useGame } from '@/context/GameContext';
 import { useSession } from 'next-auth/react';
+import { useTranslation } from '@/context/LanguageContext';
 import UserOptionsModal from '@/components/UserOptionsModal';
 import BugReportModal from '@/components/BugReportModal';
 
 export default function Header() {
+  const { t } = useTranslation();
   const { state, activeVillage, setActiveVillageId } = useGame();
   const { data: session } = useSession();
   const [serverTime, setServerTime] = useState<Date>(new Date());
@@ -39,10 +41,10 @@ export default function Header() {
   const playerVillages = state.worldMap.filter(t => t.owner === state.playerName);
 
   const navLinks = [
-    { href: '/', label: 'Village', icon: '🏰' },
-    { href: '/map', label: 'Map', icon: '🗺️' },
-    { href: '/reports', label: 'Reports', icon: '📜', badge: unseenCount },
-    { href: '/rankings', label: 'Rankings', icon: '🏆' },
+    { href: '/', label: t('ui.village'), icon: '🏰' },
+    { href: '/map', label: t('ui.map'), icon: '🗺️' },
+    { href: '/reports', label: t('ui.reports'), icon: '📜', badge: unseenCount },
+    { href: '/rankings', label: t('ui.rankings'), icon: '🏆' },
   ];
 
   return (
@@ -169,15 +171,33 @@ export default function Header() {
           <div className="w-px h-4 bg-outline-variant" />
 
           <div className="flex items-center gap-2 text-[10px]">
-            <button
-              onClick={() => setShowOptions(true)}
-              className="w-6 h-6 rounded-full bg-primary/20 hover:bg-primary/30 flex items-center justify-center text-primary text-xs font-bold transition-all"
-              title="Player Options"
-            >
-              {(session?.user?.name || state.playerName).charAt(0).toUpperCase()}
-            </button>
-            <span className="text-gray-300 font-bold hidden lg:inline">{session?.user?.name || state.playerName}</span>
-            <button onClick={() => setShowOptions(true)} className="text-[8px] text-gray-500 hover:text-primary transition-colors ml-1" title="Options">⚙️</button>
+            {/* Avatar with Golden Ring for Premium */}
+            <div className={`relative p-[1.5px] rounded-full transition-all ${state.premiumUntil && state.premiumUntil > Date.now() ? 'bg-gradient-to-tr from-yellow-600 via-yellow-200 to-yellow-600 shadow-[0_0_8px_rgba(250,204,21,0.4)]' : ''}`}>
+              <button
+                onClick={() => setShowOptions(true)}
+                className="w-6 h-6 rounded-full bg-surface-highest hover:brightness-125 flex items-center justify-center text-primary text-xs font-bold transition-all relative overflow-hidden"
+                title="Player Options"
+              >
+                {(session?.user?.name || state.playerName).charAt(0).toUpperCase()}
+              </button>
+            </div>
+
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5 leading-none">
+                <span className="text-gray-300 font-bold truncate max-w-[100px] lg:max-w-none">
+                  {session?.user?.name || state.playerName}
+                </span>
+                {state.premiumUntil && state.premiumUntil > Date.now() && (
+                  <span className="text-xs animate-pulse" title="Premium Account">👑</span>
+                )}
+              </div>
+              <button 
+                onClick={() => setShowOptions(true)} 
+                className="text-[8px] text-gray-500 hover:text-primary transition-colors text-left font-bold uppercase tracking-tighter"
+              >
+                {t('ui.settings')}
+              </button>
+            </div>
           </div>
         </div>
       </div>

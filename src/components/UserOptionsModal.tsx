@@ -1,14 +1,14 @@
-"use client";
-
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useGame } from '@/context/GameContext';
+import { useTranslation } from '@/context/LanguageContext';
 
 interface Props {
   onClose: () => void;
 }
 
 export default function UserOptionsModal({ onClose }: Props) {
+  const { t, locale, setLocale } = useTranslation();
   const { data: session } = useSession();
   const { state, setMapSettings } = useGame();
   const [tab, setTab] = useState<'profile' | 'display' | 'account'>('profile');
@@ -32,14 +32,14 @@ export default function UserOptionsModal({ onClose }: Props) {
 
         {/* Tabs */}
         <div className="flex border-b border-outline-variant">
-          {(['profile', 'display', 'account'] as const).map(t => (
+          {(['profile', 'display', 'account'] as const).map(tTab => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
+              key={tTab}
+              onClick={() => setTab(tTab)}
               className={`flex-1 py-2.5 text-[9px] font-bold uppercase tracking-widest transition-all
-                ${tab === t ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-gray-500 hover:text-gray-300'}`}
+                ${tab === tTab ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-gray-500 hover:text-gray-300'}`}
             >
-              {t === 'profile' ? '👤 Profile' : t === 'display' ? '🗺️ Map' : '🔒 Account'}
+              {tTab === 'profile' ? `👤 ${t('ui.settings')}` : tTab === 'display' ? `🗺️ ${t('ui.map')}` : `🔒 ${t('ui.login')}`}
             </button>
           ))}
         </div>
@@ -56,13 +56,13 @@ export default function UserOptionsModal({ onClose }: Props) {
               <div className="bg-surface-highest border border-outline-variant rounded p-4">
                 <div className="grid grid-cols-2 gap-3 text-center">
                   <div>
-                    <p className="text-[9px] text-gray-500 uppercase tracking-widest">Villages</p>
+                    <p className="text-[9px] text-gray-500 uppercase tracking-widest">{t('ui.villages')}</p>
                     <p className="text-lg font-bold text-white font-mono">
                       {state.worldMap.filter(t => t.owner === state.playerName).length}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[9px] text-gray-500 uppercase tracking-widest">Total Points</p>
+                    <p className="text-[9px] text-gray-500 uppercase tracking-widest">{t('ui.total_points')}</p>
                     <p className="text-lg font-bold text-primary font-mono">
                       {state.worldMap.filter(t => t.owner === state.playerName).reduce((acc, t) => acc + (t.points || 0), 0).toLocaleString()}
                     </p>
@@ -75,6 +75,17 @@ export default function UserOptionsModal({ onClose }: Props) {
           {/* Display / Map Tab */}
           {tab === 'display' && (
             <div className="space-y-4">
+              <div className="flex items-center justify-between py-2 border-b border-outline-variant/50">
+                <div>
+                  <p className="text-[10px] text-gray-200 font-bold">{t('ui.language')}</p>
+                  <p className="text-[9px] text-gray-500">{t('ui.language_pick')}</p>
+                </div>
+                <div className="flex gap-1 bg-black/40 p-1 rounded border border-outline-variant">
+                   <button onClick={() => setLocale('en')} className={`px-3 py-1 text-[9px] font-bold rounded uppercase transition-all ${locale === 'en' ? 'bg-primary text-black' : 'text-gray-500 hover:text-gray-300'}`}>EN</button>
+                   <button onClick={() => setLocale('pl')} className={`px-3 py-1 text-[9px] font-bold rounded uppercase transition-all ${locale === 'pl' ? 'bg-primary text-black' : 'text-gray-500 hover:text-gray-300'}`}>PL</button>
+                </div>
+              </div>
+
               <ToggleRow
                 label="Tactical View Mode"
                 description="Isometric perspective on the world map"

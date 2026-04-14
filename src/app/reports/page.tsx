@@ -3,14 +3,21 @@
 import { useGame, BattleReport } from '@/context/GameContext';
 import { useState, useMemo } from 'react';
 import { UNIT_EMOJIS, BUILDING_META, Units, Buildings, UNIT_ATLAS } from '@/utils/shared';
+import { useTranslation } from '@/context/LanguageContext';
 
 const UNIT_KEYS: (keyof Units)[] = [
   'pikeman', 'swordman', 'axeman', 'archer', 'scout',
   'lightCavalry', 'heavyCavalry', 'horseArcher', 'knight', 'nobleman'
 ];
 
-function timeAgo(ts: number): string {
+function timeAgo(ts: number, locale: string): string {
   const diff = Math.floor((Date.now() - ts) / 1000);
+  if (locale === 'pl') {
+    if (diff < 60) return 'przed chwilą';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m temu`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h temu`;
+    return `${Math.floor(diff / 86400)}d temu`;
+  }
   if (diff < 60) return 'just now';
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
@@ -18,6 +25,7 @@ function timeAgo(ts: number): string {
 }
 
 export default function ReportsPage() {
+  const { t, locale } = useTranslation();
   const { state, markReportAsRead } = useGame();
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'attack' | 'scout' | 'incoming'>('all');
@@ -70,8 +78,8 @@ export default function ReportsPage() {
       {/* ── 1. STATS DASHBOARD ── */}
       <div className="shrink-0 px-6 py-4 border-b border-outline-variant bg-surface-low">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg text-white font-bold medieval-font tracking-widest uppercase">Military Archives</h1>
-          <span className="text-[9px] text-gray-500 font-mono">{stats.total} operations</span>
+          <h1 className="text-lg text-white font-bold medieval-font tracking-widest uppercase">{t('ui.reports')}</h1>
+          <span className="text-[9px] text-gray-500 font-mono">{stats.total} {t('common.points')}</span>
         </div>
       </div>
 
@@ -91,7 +99,7 @@ export default function ReportsPage() {
               onChange={e => setSort(e.target.value as typeof sort)}
               className="text-[9px] bg-surface-highest text-gray-400 border border-outline-variant rounded px-2 py-1 outline-none font-bold uppercase tracking-wider cursor-pointer"
             >
-              <option value="newest">Newest</option>
+              <option value="newest">{t('ui.reports')} (Newest)</option>
               <option value="oldest">Oldest</option>
               <option value="target">By Target</option>
             </select>
@@ -131,9 +139,9 @@ export default function ReportsPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className={`text-[10px] font-bold uppercase tracking-wider ${report.result === 'victory' ? 'text-emerald-400' : report.result === 'defeat' ? 'text-red-400' : 'text-blue-400'}`}>
-                      {report.result}
+                      {t(`ui.${report.result}`)}
                     </span>
-                    <span className="text-[9px] text-gray-600 font-mono">{timeAgo(report.timestamp)}</span>
+                    <span className="text-[9px] text-gray-600 font-mono">{timeAgo(report.timestamp, locale)}</span>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-[10px] text-gray-400 font-bold truncate">{report.targetName}</span>
@@ -205,6 +213,7 @@ function EmptyState({ hasReports }: { hasReports: boolean }) {
 
 /* ── REPORT DETAIL ── */
 function ReportDetail({ report }: { report: BattleReport }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-3 animate-in fade-in duration-300">
       {/* Header */}
@@ -222,7 +231,7 @@ function ReportDetail({ report }: { report: BattleReport }) {
               <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-400">Incoming</span>
             )}
             <span className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${report.result === 'victory' ? 'bg-emerald-500/15 text-emerald-400' : report.result === 'defeat' ? 'bg-red-500/15 text-red-400' : 'bg-blue-500/15 text-blue-400'}`}>
-              {report.direction === 'incoming' ? (report.result === 'victory' ? 'Defended' : 'Pillaged') : report.result}
+              {report.direction === 'incoming' ? (report.result === 'victory' ? 'Defended' : 'Pillaged') : t(`ui.${report.result}`)}
             </span>
             <span className="text-[8px] text-gray-500 font-mono">{new Date(report.timestamp).toLocaleString()}</span>
           </div>
@@ -233,7 +242,7 @@ function ReportDetail({ report }: { report: BattleReport }) {
       <div className="grid grid-cols-3 gap-2">
         <div className="bg-black/30 border border-outline-variant px-2 py-1.5 rounded">
           <span className="text-[8px] text-gray-500 uppercase tracking-widest font-bold block">
-            {report.direction === 'incoming' ? 'Attacker' : 'From'}
+            {report.direction === 'incoming' ? t('ui.attacker') : t('ui.village')}
           </span>
           <span className={`text-[10px] font-bold ${report.direction === 'incoming' ? 'text-red-400' : 'text-blue-400'}`}>
             {report.direction === 'incoming' ? (report.attackerName || 'Barbarian') : (report.originName || '—')}
@@ -242,12 +251,12 @@ function ReportDetail({ report }: { report: BattleReport }) {
         </div>
         <div className="bg-black/30 border border-outline-variant px-2 py-1.5 rounded">
           <span className="text-[8px] text-gray-500 uppercase tracking-widest font-bold block">
-            {report.direction === 'incoming' ? 'Your Village' : 'Target'}
+            {report.direction === 'incoming' ? t('ui.village') : 'Target'}
           </span>
           <span className={`text-[10px] font-bold ${report.direction === 'incoming' ? 'text-blue-400' : 'text-red-400'}`}>{report.targetName}</span>
         </div>
         <div className="bg-black/30 border border-outline-variant px-2 py-1.5 rounded">
-          <span className="text-[8px] text-gray-500 uppercase tracking-widest font-bold block">Coordinates</span>
+          <span className="text-[8px] text-gray-500 uppercase tracking-widest font-bold block">{t('ui.coordinates')}</span>
           <span className="text-[10px] text-primary font-mono font-bold">{report.targetX}|{report.targetY}</span>
         </div>
       </div>
@@ -257,12 +266,12 @@ function ReportDetail({ report }: { report: BattleReport }) {
         <>
           {/* Resources with bars */}
           <div className="bg-black/20 border border-outline-variant rounded p-2.5">
-            <h3 className="text-[9px] text-primary/70 font-bold uppercase tracking-[0.2em] mb-1.5">Resources</h3>
+            <h3 className="text-[9px] text-primary/70 font-bold uppercase tracking-[0.2em] mb-1.5">{t('common.resources')}</h3>
             <div className="flex flex-col gap-1.5">
               {[
-                { label: '🪵 Wood', value: Math.floor(report.targetResources.wood), color: 'bg-wood', textColor: 'text-wood' },
-                { label: '🧱 Clay', value: Math.floor(report.targetResources.clay), color: 'bg-clay', textColor: 'text-clay' },
-                { label: '⛏️ Iron', value: Math.floor(report.targetResources.iron), color: 'bg-iron', textColor: 'text-iron' },
+                { label: `🪵 ${t('common.wood')}`, value: Math.floor(report.targetResources.wood), color: 'bg-wood', textColor: 'text-wood' },
+                { label: `🧱 ${t('common.clay')}`, value: Math.floor(report.targetResources.clay), color: 'bg-clay', textColor: 'text-clay' },
+                { label: `⛏️ ${t('common.iron')}`, value: Math.floor(report.targetResources.iron), color: 'bg-iron', textColor: 'text-iron' },
               ].map(r => (
                 <div key={r.label} className="flex items-center gap-3">
                   <span className={`text-[10px] ${r.textColor} font-bold w-20`}>{r.label}</span>
@@ -283,7 +292,7 @@ function ReportDetail({ report }: { report: BattleReport }) {
                 {Object.entries(report.targetUnits).filter(([, v]) => (v as number) > 0).map(([u, v]) => (
                   <div key={u} className="flex items-center gap-2 bg-black/30 px-2.5 py-1.5 rounded border border-outline-variant">
                     <span className="text-sm">{UNIT_EMOJIS[u]}</span>
-                    <span className="text-[10px] text-gray-400 flex-1">{UNIT_ATLAS[u as keyof Units].name}</span>
+                    <span className="text-[10px] text-gray-400 flex-1">{t(`units.${u}.name`)}</span>
                     <span className="text-[10px] text-amber-100 font-mono font-bold">{v as number}</span>
                   </div>
                 ))}
@@ -300,8 +309,8 @@ function ReportDetail({ report }: { report: BattleReport }) {
               <div className="grid grid-cols-2 gap-1.5">
                 {Object.entries(report.targetBuildings).map(([b, l]) => (
                   <div key={b} className="flex items-center justify-between bg-black/30 px-2.5 py-1.5 rounded border border-outline-variant">
-                    <span className="text-[10px] text-gray-400">{BUILDING_META[b as keyof Buildings].name}</span>
-                    <span className="text-[10px] text-primary font-mono font-bold">Lv.{l as number}</span>
+                    <span className="text-[10px] text-gray-400">{t(`buildings.${b}.name`)}</span>
+                    <span className="text-[10px] text-primary font-mono font-bold">{t('common.level')} {l as number}</span>
                   </div>
                 ))}
               </div>
@@ -328,7 +337,7 @@ function ReportDetail({ report }: { report: BattleReport }) {
                   return (
                     <div key={u} className="flex items-center gap-1.5 text-[10px]">
                       <span className="text-sm w-5">{UNIT_EMOJIS[u]}</span>
-                      <span className="text-gray-500 flex-1">{UNIT_ATLAS[u].name}</span>
+                      <span className="text-gray-500 flex-1">{t(`units.${u}.name`)}</span>
                       <span className="text-green-400 font-mono font-bold w-6 text-right">{survived}</span>
                       {lost > 0 && <span className="text-red-400 font-mono text-[9px] w-8 text-right">-{lost}</span>}
                     </div>
@@ -351,7 +360,7 @@ function ReportDetail({ report }: { report: BattleReport }) {
                     return (
                       <div key={u} className="flex items-center gap-1.5 text-[10px]">
                         <span className="text-sm w-5">{UNIT_EMOJIS[u]}</span>
-                        <span className="text-gray-500 flex-1">{UNIT_ATLAS[u].name}</span>
+                        <span className="text-gray-500 flex-1">{t(`units.${u}.name`)}</span>
                         <span className={`font-mono font-bold w-6 text-right ${survived > 0 ? 'text-green-400' : 'text-red-400'}`}>{survived}</span>
                         {lost > 0 && <span className="text-red-400 font-mono text-[9px] w-8 text-right">-{lost}</span>}
                       </div>

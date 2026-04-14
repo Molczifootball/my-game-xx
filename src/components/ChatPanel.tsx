@@ -9,6 +9,9 @@ interface ChatMessage {
   authorName: string;
   authorId: string;
   createdAt: string;
+  user?: {
+    premiumUntil: string | null;
+  };
 }
 
 export default function ChatPanel() {
@@ -79,7 +82,7 @@ export default function ChatPanel() {
   const myId = session?.user?.id;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2 text-xs">
       {/* Chat panel */}
       {open && (
         <div className="w-80 h-96 glass-panel rounded-lg shadow-2xl flex flex-col overflow-hidden border border-outline-variant animate-in slide-in-from-bottom-4 duration-200">
@@ -94,7 +97,7 @@ export default function ChatPanel() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-2 flex flex-col gap-1">
+          <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-2 flex flex-col gap-1.5">
             {messages.length === 0 ? (
               <div className="flex-1 flex items-center justify-center text-gray-600 text-[10px] uppercase tracking-widest">
                 No messages yet. Say hello!
@@ -103,16 +106,23 @@ export default function ChatPanel() {
               messages.map(msg => {
                 const isMe = msg.authorId === myId;
                 const time = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const isPremium = msg.user?.premiumUntil && new Date(msg.user.premiumUntil).getTime() > Date.now();
+                
                 return (
                   <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                    <div className={`flex items-baseline gap-1.5 mb-0.5 ${isMe ? 'flex-row-reverse' : ''}`}>
-                      <span className={`text-[9px] font-bold ${isMe ? 'text-primary' : 'text-amber-400'}`}>{msg.authorName}</span>
+                    <div className={`flex items-center gap-1.5 mb-0.5 ${isMe ? 'flex-row-reverse' : ''}`}>
+                      <div className="flex items-center gap-1">
+                        <span className={`text-[9px] font-bold ${isPremium ? 'text-amber-400' : isMe ? 'text-primary' : 'text-gray-400'}`}>
+                          {msg.authorName}
+                        </span>
+                        {isPremium && <span className="text-[8px] animate-pulse">👑</span>}
+                      </div>
                       <span className="text-[8px] text-gray-600 font-mono">{time}</span>
                     </div>
-                    <div className={`max-w-[85%] px-2.5 py-1.5 rounded-lg text-[10px] leading-relaxed break-words
+                    <div className={`max-w-[85%] px-2.5 py-1.5 rounded-lg text-[10px] leading-relaxed break-words shadow-sm transition-all
                       ${isMe
-                        ? 'bg-primary/20 text-white border border-primary/30 rounded-br-none'
-                        : 'bg-surface-highest text-gray-200 border border-outline-variant rounded-bl-none'
+                        ? `border rounded-br-none ${isPremium ? 'bg-amber-500/10 border-amber-500/30 text-amber-50' : 'bg-primary/20 border-primary/30 text-white'}`
+                        : `bg-surface-highest text-gray-200 border border-outline-variant rounded-bl-none ${isPremium ? 'border-amber-500/20' : ''}`
                       }`}>
                       {msg.content}
                     </div>

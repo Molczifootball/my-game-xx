@@ -16,12 +16,14 @@ export interface ActiveUpgrade {
   building: keyof Buildings;
   targetLevel: number;
   completesAt: number;
+  durationMs: number;
 }
 
 export interface ActiveRecruitment {
   id: string;
   unit: keyof Units;
   completesAt: number;
+  durationMs?: number;
 }
 
 export interface ActiveCommand {
@@ -64,6 +66,24 @@ export interface BattleReport {
   isRead: boolean;
 }
 
+export interface ClanMember {
+  id: string;
+  name: string;
+  role: 'OWNER' | 'OFFICER' | 'MEMBER';
+  points: number;
+}
+
+export interface Clan {
+  id: string;
+  name: string;
+  tag: string;
+  description: string;
+  level: number;
+  experience: number;
+  members: ClanMember[];
+  ownerId: string;
+}
+
 export interface MapTile {
   id: string;
   x: number;
@@ -97,6 +117,10 @@ export interface GameState {
   worldMap: MapTile[];
   lastTick: number;
   mapSettings: MapSettings;
+  // Social & Premium
+  clan?: Clan;
+  premiumUntil?: number; // timestamp
+  notes?: string;
 }
 
 interface GameContextType {
@@ -118,6 +142,11 @@ interface GameContextType {
   regenerateMap: () => void;
   playerPoints: number;
   setMapSettings: (settings: MapSettings) => void;
+  // Clan & Premium Actions
+  createClan: (name: string, tag: string) => Promise<void>;
+  investInClan: (resources: Partial<Resources>) => Promise<void>;
+  updateNotes: (notes: string) => Promise<void>;
+  buyPremium: () => Promise<void>;
 }
 
 const generateWorldMap = (): MapTile[] => {
@@ -242,6 +271,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             building: u.building,
             targetLevel: u.targetLevel,
             completesAt: u.completesAt,
+            durationMs: u.durationMs,
           })) : [],
         }));
 
@@ -265,7 +295,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             timestamp: new Date(r.createdAt).getTime(),
           })),
           worldMap,
-          lastTick: Date.now()
+          lastTick: Date.now(),
+          clan: data.clan,
+          premiumUntil: data.premiumUntil ? new Date(data.premiumUntil).getTime() : undefined,
+          notes: data.notes
         }));
       }
     } catch (e) {
@@ -373,13 +406,30 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const regenerateMap = () => loadState(); 
   const setMapSettings = (settings: MapSettings) => setState(p => ({ ...p, mapSettings: settings }));
 
+  const createClan = async (name: string, tag: string) => {
+    await performAction('create_clan', { name, tag });
+  };
+
+  const investInClan = async (resources: Partial<Resources>) => {
+    await performAction('invest_clan', { resources });
+  };
+
+  const updateNotes = async (notes: string) => {
+    await performAction('update_notes', { notes });
+  };
+
+  const buyPremium = async () => {
+    await performAction('buy_premium', {});
+  };
+
   if (!mounted) return null;
 
   return (
     <GameContext.Provider value={{ 
       state, activeVillage, setActiveVillageId, upgradeBuilding, recruitUnit, dispatchArmy, 
       MAX_LEVELS, getTimeRemaining, resetVillage, addResources, maxAllBuildings, renameVillage, 
-      markReportAsRead, addArmy, updateWorldTile, regenerateMap, playerPoints, setMapSettings 
+      markReportAsRead, addArmy, updateWorldTile, regenerateMap, playerPoints, setMapSettings,
+      createClan, investInClan, updateNotes, buyPremium 
     }}>
       {children}
     </GameContext.Provider>

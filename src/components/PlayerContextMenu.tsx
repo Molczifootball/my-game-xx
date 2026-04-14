@@ -1,7 +1,6 @@
-"use client";
-
 import { useEffect, useRef } from 'react';
 import { useGame } from '@/context/GameContext';
+import { useTranslation } from '@/context/LanguageContext';
 
 interface Props {
   playerName: string;
@@ -13,6 +12,7 @@ interface Props {
 }
 
 export default function PlayerContextMenu({ playerName, x, y, onClose, onNavigate, onAttack }: Props) {
+  const { t } = useTranslation();
   const { state } = useGame();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -46,17 +46,17 @@ export default function PlayerContextMenu({ playerName, x, y, onClose, onNavigat
           <span className="text-xl">{isYou ? '👑' : '⚔️'}</span>
           <div>
             <p className={`text-xs font-bold ${isYou ? 'text-primary' : 'text-white'} truncate`}>{playerName}</p>
-            {isYou && <p className="text-[8px] text-primary/60 uppercase tracking-widest">You</p>}
+            {isYou && <p className="text-[8px] text-primary/60 uppercase tracking-widest">{t('ui.village')}</p>}
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2 mt-3">
           <div className="text-center">
-            <p className="text-[8px] text-gray-500 uppercase tracking-widest">Villages</p>
+            <p className="text-[8px] text-gray-500 uppercase tracking-widest">{t('ui.village')}s</p>
             <p className="text-sm font-bold text-white font-mono">{villageCount}</p>
           </div>
           <div className="text-center">
-            <p className="text-[8px] text-gray-500 uppercase tracking-widest">Points</p>
+            <p className="text-[8px] text-gray-500 uppercase tracking-widest">{t('common.points')}</p>
             <p className="text-sm font-bold text-primary font-mono">{totalPoints.toLocaleString()}</p>
           </div>
         </div>
@@ -69,7 +69,7 @@ export default function PlayerContextMenu({ playerName, x, y, onClose, onNavigat
             onClick={() => { onNavigate(capital.x, capital.y); onClose(); }}
             className="w-full text-left px-4 py-2.5 text-[10px] text-gray-300 hover:bg-white/[0.05] hover:text-white transition-colors flex items-center gap-2.5 font-bold uppercase tracking-widest"
           >
-            <span>🗺️</span> Find on Map
+            <span>🗺️</span> {t('ui.findOnMap')}
           </button>
         )}
 
@@ -78,7 +78,7 @@ export default function PlayerContextMenu({ playerName, x, y, onClose, onNavigat
             onClick={() => { onAttack(playerName); onClose(); }}
             className="w-full text-left px-4 py-2.5 text-[10px] text-red-400 hover:bg-red-900/20 transition-colors flex items-center gap-2.5 font-bold uppercase tracking-widest"
           >
-            <span>⚔️</span> Attack Capital
+            <span>⚔️</span> {t('ui.attackCapital')}
           </button>
         )}
 
@@ -87,7 +87,7 @@ export default function PlayerContextMenu({ playerName, x, y, onClose, onNavigat
             onClick={onClose}
             className="w-full text-left px-4 py-2.5 text-[10px] text-gray-500 hover:bg-white/[0.03] transition-colors flex items-center gap-2.5 font-bold uppercase tracking-wider"
           >
-            <span>📋</span> View Villages
+            <span>📋</span> {t('ui.viewVillages')}
           </button>
         )}
 
@@ -97,7 +97,7 @@ export default function PlayerContextMenu({ playerName, x, y, onClose, onNavigat
           onClick={onClose}
           className="w-full text-left px-4 py-2 text-[9px] text-gray-600 hover:text-gray-400 transition-colors flex items-center gap-2"
         >
-          ✕ Close
+          ✕ {t('ui.close')}
         </button>
       </div>
     </div>

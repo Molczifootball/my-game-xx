@@ -85,7 +85,7 @@ export default function PlacementTool() {
           <div className="flex items-center justify-center gap-3">
             <span className="text-gray-400 text-[10px]">Click to place:</span>
             <span className="text-lg">{BUILDING_META[currentBuilding].icon}</span>
-            <span className="text-primary font-bold text-sm">{BUILDING_META[currentBuilding].name}</span>
+            <span className="text-primary font-bold text-sm">{(currentBuilding as string).replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</span>
             <span className="text-gray-500 text-[9px]">({currentIndex + 1}/{BUILDING_ORDER.length})</span>
           </div>
         ) : null}
@@ -112,7 +112,7 @@ export default function PlacementTool() {
             <div key={id} className="absolute -translate-x-1/2 -translate-y-1/2 z-30 flex flex-col items-center" style={{ left: pos.x, top: pos.y }}>
               <div className={`w-3 h-3 rounded-full border-2 border-white shadow-lg ${isCurrent ? 'bg-yellow-400' : 'bg-green-500'}`} />
               <span className="text-[8px] text-white bg-black/80 px-1.5 py-0.5 rounded mt-0.5 whitespace-nowrap font-bold shadow-lg">
-                {BUILDING_META[id].icon} {BUILDING_META[id].name}
+                {BUILDING_META[id].icon} {(id as string).replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
               </span>
             </div>
           );

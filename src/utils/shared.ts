@@ -49,17 +49,17 @@ export interface Units {
   nobleman: number;
 }
 
-export const UNIT_ATLAS: Record<keyof Units, { name: string, reqB: keyof Buildings, reqLvl: number, w: number, c: number, i: number, grain: number, fish: number, meat: number, pop: number, time: number, speed: number, carry: number, atk: number, def: number, defCav: number, defArch: number }> = {
-  pikeman:      { name: "Pikeman",       reqB: 'barracks', reqLvl: 1,  w: 50,    c: 30,    i: 10,    grain: 1, fish: 0, meat: 0, pop: 1, time: 15,  speed: 8,  carry: 25,  atk: 10,  def: 15,  defCav: 45,  defArch: 20 },
-  swordman:     { name: "Swordsman",     reqB: 'barracks', reqLvl: 1,  w: 50,    c: 30,    i: 10,    grain: 1, fish: 0, meat: 0, pop: 1, time: 20,  speed: 10, carry: 15,  atk: 25,  def: 50,  defCav: 15,  defArch: 40 },
-  axeman:       { name: "Axeman",        reqB: 'barracks', reqLvl: 2,  w: 50,    c: 30,    i: 10,    grain: 2, fish: 0, meat: 0, pop: 1, time: 18,  speed: 8,  carry: 10,  atk: 40,  def: 10,  defCav: 5,   defArch: 10 },
-  scout:        { name: "Scout",         reqB: 'stable',   reqLvl: 1,  w: 50,    c: 50,    i: 20,    grain: 1, fish: 0, meat: 0, pop: 1, time: 10,  speed: 3,  carry: 0,   atk: 0,   def: 2,   defCav: 1,   defArch: 2 },
-  archer:       { name: "Archer",        reqB: 'barracks', reqLvl: 5,  w: 100,   c: 30,    i: 60,    grain: 0, fish: 2, meat: 0, pop: 2, time: 25,  speed: 8,  carry: 10,  atk: 15,  def: 50,  defCav: 40,  defArch: 5 },
-  lightCavalry: { name: "Light Cavalry", reqB: 'stable',   reqLvl: 3,  w: 125,   c: 100,   i: 250,   grain: 0, fish: 2, meat: 0, pop: 2, time: 30,  speed: 4,  carry: 80,  atk: 130, def: 30,  defCav: 40,  defArch: 30 },
-  horseArcher:  { name: "Horse Archer",  reqB: 'stable',   reqLvl: 5,  w: 250,   c: 100,   i: 150,   grain: 0, fish: 3, meat: 0, pop: 2, time: 35,  speed: 5,  carry: 50,  atk: 120, def: 40,  defCav: 30,  defArch: 50 },
-  heavyCavalry: { name: "Heavy Cavalry", reqB: 'stable',   reqLvl: 5,  w: 200,   c: 150,   i: 600,   grain: 0, fish: 0, meat: 3, pop: 3, time: 45,  speed: 5,  carry: 50,  atk: 150, def: 200, defCav: 80,  defArch: 180 },
-  knight:       { name: "Knight",        reqB: 'castle',   reqLvl: 1,  w: 1000,  c: 1000,  i: 1000,  grain: 0, fish: 0, meat: 5, pop: 3, time: 120, speed: 4,  carry: 100, atk: 150, def: 250, defCav: 250, defArch: 250 },
-  nobleman:     { name: "Nobleman",      reqB: 'palace',   reqLvl: 1,  w: 40000, c: 50000, i: 50000, grain: 0, fish: 0, meat: 8, pop: 3, time: 300, speed: 20, carry: 0,   atk: 30,  def: 100, defCav: 100, defArch: 100 },
+export const UNIT_ATLAS: Record<keyof Units, { reqB: keyof Buildings, reqLvl: number, w: number, c: number, i: number, grain: number, fish: number, meat: number, pop: number, time: number, speed: number, carry: number, atk: number, def: number, defCav: number, defArch: number }> = {
+  pikeman:      { reqB: 'barracks', reqLvl: 1,  w: 50,    c: 30,    i: 10,    grain: 1, fish: 0, meat: 0, pop: 1, time: 15,  speed: 8,  carry: 25,  atk: 10,  def: 15,  defCav: 45,  defArch: 20 },
+  swordman:     { reqB: 'barracks', reqLvl: 1,  w: 50,    c: 30,    i: 10,    grain: 1, fish: 0, meat: 0, pop: 1, time: 20,  speed: 10, carry: 15,  atk: 25,  def: 50,  defCav: 15,  defArch: 40 },
+  axeman:       { reqB: 'barracks', reqLvl: 2,  w: 50,    c: 30,    i: 10,    grain: 2, fish: 0, meat: 0, pop: 1, time: 18,  speed: 8,  carry: 10,  atk: 40,  def: 10,  defCav: 5,   defArch: 10 },
+  scout:        { reqB: 'stable',   reqLvl: 1,  w: 50,    c: 50,    i: 20,    grain: 1, fish: 0, meat: 0, pop: 1, time: 10,  speed: 3,  carry: 0,   atk: 0,   def: 2,   defCav: 1,   defArch: 2 },
+  archer:       { reqB: 'barracks', reqLvl: 5,  w: 100,   c: 30,    i: 60,    grain: 0, fish: 2, meat: 0, pop: 2, time: 25,  speed: 8,  carry: 10,  atk: 15,  def: 50,  defCav: 40,  defArch: 5 },
+  lightCavalry: { reqB: 'stable',   reqLvl: 3,  w: 125,   c: 100,   i: 250,   grain: 0, fish: 2, meat: 0, pop: 2, time: 30,  speed: 4,  carry: 80,  atk: 130, def: 30,  defCav: 40,  defArch: 30 },
+  horseArcher:  { reqB: 'stable',   reqLvl: 5,  w: 250,   c: 100,   i: 150,   grain: 0, fish: 3, meat: 0, pop: 2, time: 35,  speed: 5,  carry: 50,  atk: 120, def: 40,  defCav: 30,  defArch: 50 },
+  heavyCavalry: { reqB: 'stable',   reqLvl: 5,  w: 200,   c: 150,   i: 600,   grain: 0, fish: 0, meat: 3, pop: 3, time: 45,  speed: 5,  carry: 50,  atk: 150, def: 200, defCav: 80,  defArch: 180 },
+  knight:       { reqB: 'castle',   reqLvl: 1,  w: 1000,  c: 1000,  i: 1000,  grain: 0, fish: 0, meat: 5, pop: 3, time: 120, speed: 4,  carry: 100, atk: 150, def: 250, defCav: 250, defArch: 250 },
+  nobleman:     { reqB: 'palace',   reqLvl: 1,  w: 40000, c: 50000, i: 50000, grain: 0, fish: 0, meat: 8, pop: 3, time: 300, speed: 20, carry: 0,   atk: 30,  def: 100, defCav: 100, defArch: 100 },
 };
 
 export const getFoodUpkeep = (units: Partial<Units>): { grain: number; fish: number; meat: number } => {
@@ -79,8 +79,6 @@ export const getCurrentPopulation = (units: Partial<Units>, recruitment?: { unit
   return pop;
 };
 
-
-
 export const formatTime = (seconds: number) => {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
@@ -88,22 +86,22 @@ export const formatTime = (seconds: number) => {
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 };
 
-export const BUILDING_META: Record<keyof Buildings, { name: string, desc: string, icon: string, image: string }> = {
-  headquarters: { name: "Headquarters", desc: "Construct other buildings faster and unlock new ones.", icon: "🏰", image: "/images/headquarters.png" },
-  timberCamp: { name: "Timber Camp", desc: "Produces wood necessary for buildings and weapons.", icon: "🪓", image: "/images/timberCamp.png" },
-  clayPit: { name: "Clay Pit", desc: "Produces clay essential for advanced structures.", icon: "🧱", image: "/images/clayPit.png" },
-  ironMine: { name: "Iron Mine", desc: "Extracts iron for recruiting strong military units.", icon: "⛏️", image: "/images/ironMine.png" },
-  warehouse: { name: "Warehouse", desc: "Stores resources. Increase level to hold more.", icon: "🛖", image: "/images/warehouse.png" },
-  cityWall: { name: "City Wall", desc: "Protects your village against enemy attacks.", icon: "🧱", image: "/images/cityWall.png" },
-  barracks: { name: "Barracks", desc: "Train infantry units like Swordsmen and Archers.", icon: "⚔️", image: "/images/barracks.png" },
-  stable: { name: "Stable", desc: "Breed warhorses and train devastating cavalry units.", icon: "🐎", image: "/images/stable.png" },
-  castle: { name: "Castle", desc: "A magnificent fortress to train your loyal Knight.", icon: "🛡️", image: "/images/castle.png" },
-  palace: { name: "Palace", desc: "The seat of authority. Grants the ability to train Noblemen to conquer villages.", icon: "👑", image: "/images/palace.png" },
-  farm: { name: "Farm", desc: "Produces grain to feed your infantry. The backbone of your food supply.", icon: "🌾", image: "/images/headquarters.png" },
-  granary: { name: "Granary", desc: "Stores grain, meat and fish. Increase level to hold more food.", icon: "🏪", image: "/images/warehouse.png" },
-  huntersLodge: { name: "Hunter's Lodge", desc: "Hunters provide meat to feed your cavalry and elite units.", icon: "🏹", image: "/images/barracks.png" },
-  fishery: { name: "Fishery", desc: "Catches fish from the river. Fish supplements both grain and meat.", icon: "🐟", image: "/images/headquarters.png" },
-  residence: { name: "Residence", desc: "Houses for your population. Higher level allows more soldiers to be stationed.", icon: "🏠", image: "/images/headquarters.png" },
+export const BUILDING_META: Record<keyof Buildings, { icon: string, image: string }> = {
+  headquarters: { icon: "🏰", image: "/images/headquarters.png" },
+  timberCamp: { icon: "🪓", image: "/images/timberCamp.png" },
+  clayPit: { icon: "🧱", image: "/images/clayPit.png" },
+  ironMine: { icon: "⛏️", image: "/images/ironMine.png" },
+  warehouse: { icon: "🛖", image: "/images/warehouse.png" },
+  cityWall: { icon: "🧱", image: "/images/cityWall.png" },
+  barracks: { icon: "⚔️", image: "/images/barracks.png" },
+  stable: { icon: "🐎", image: "/images/stable.png" },
+  castle: { icon: "🛡️", image: "/images/castle.png" },
+  palace: { icon: "👑", image: "/images/palace.png" },
+  farm: { icon: "🌾", image: "/images/headquarters.png" },
+  granary: { icon: "🏪", image: "/images/warehouse.png" },
+  huntersLodge: { icon: "🏹", image: "/images/barracks.png" },
+  fishery: { icon: "🐟", image: "/images/headquarters.png" },
+  residence: { icon: "🏠", image: "/images/headquarters.png" },
 };
 export const MAX_LEVELS: Record<keyof Buildings, number> = {
   headquarters: 20, timberCamp: 30, clayPit: 30, ironMine: 30, warehouse: 20, granary: 25, cityWall: 20, barracks: 25, stable: 20, castle: 1, palace: 1, farm: 25, huntersLodge: 25, fishery: 25, residence: 25,

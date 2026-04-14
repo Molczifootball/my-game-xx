@@ -15,7 +15,8 @@ interface MinimapProps {
 }
 
 const MINIMAP_SIZE = 160;
-const TILE_PX = MINIMAP_SIZE / 50; // 3.2px per tile
+const WORLD_SIZE = 100;
+const TILE_PX = MINIMAP_SIZE / WORLD_SIZE; // 1.6px per tile for 100x100
 
 export default function Minimap({ worldMap, playerName, centerX, centerY, viewportW, viewportH, onNavigate }: MinimapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -33,6 +34,8 @@ export default function Minimap({ worldMap, playerName, centerX, centerY, viewpo
     ctx.fillRect(0, 0, MINIMAP_SIZE, MINIMAP_SIZE);
 
     for (const tile of worldMap) {
+      if (tile.x < 1 || tile.x > WORLD_SIZE || tile.y < 1 || tile.y > WORLD_SIZE) continue;
+      
       const px = (tile.x - 1) * TILE_PX;
       const py = (tile.y - 1) * TILE_PX;
       ctx.fillStyle = getMinimapColor(tile.type, tile.owner, playerName);
@@ -59,19 +62,19 @@ export default function Minimap({ worldMap, playerName, centerX, centerY, viewpo
     ctx.drawImage(terrainImageData, 0, 0);
 
     // Draw viewport rectangle
+    // Center is the focus tile, so we subtract half the viewport to get the top-left
     const vpX = (centerX - Math.floor(viewportW / 2) - 1) * TILE_PX;
     const vpY = (centerY - Math.floor(viewportH / 2) - 1) * TILE_PX;
     const vpW = viewportW * TILE_PX;
     const vpH = viewportH * TILE_PX;
 
     ctx.strokeStyle = '#ffc63e';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1;
     ctx.strokeRect(vpX, vpY, vpW, vpH);
 
     // Inner highlight
-    ctx.strokeStyle = 'rgba(255, 198, 62, 0.3)';
-    ctx.lineWidth = 0.5;
-    ctx.strokeRect(vpX + 1, vpY + 1, vpW - 2, vpH - 2);
+    ctx.fillStyle = 'rgba(255, 198, 62, 0.05)';
+    ctx.fillRect(vpX, vpY, vpW, vpH);
   }, [terrainImageData, centerX, centerY, viewportW, viewportH]);
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -83,8 +86,8 @@ export default function Minimap({ worldMap, playerName, centerX, centerY, viewpo
     const x = Math.floor(((e.clientX - rect.left) * scaleX) / TILE_PX) + 1;
     const y = Math.floor(((e.clientY - rect.top) * scaleY) / TILE_PX) + 1;
     onNavigate(
-      Math.max(1, Math.min(50, x)),
-      Math.max(1, Math.min(50, y))
+      Math.max(1, Math.min(WORLD_SIZE, x)),
+      Math.max(1, Math.min(WORLD_SIZE, y))
     );
   }, [onNavigate]);
 

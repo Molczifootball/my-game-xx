@@ -11,6 +11,11 @@ export async function GET() {
     const messages = await prisma.chatMessage.findMany({
       orderBy: { createdAt: 'desc' },
       take: 50,
+      include: {
+        user: {
+          select: { premiumUntil: true }
+        }
+      }
     });
     return NextResponse.json({ messages: messages.reverse() });
   } catch (e) {
