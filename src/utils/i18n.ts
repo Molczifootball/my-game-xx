@@ -87,6 +87,23 @@ export const translations = {
       findOnMap: "Find on map",
       attackCapital: "Attack Capital",
       viewVillages: "View Villages",
+    },
+    landing: {
+      hero_title: "Build Your Empire. Conquer the Realm.",
+      hero_subtitle: "Lechia Online: A grand strategy experience in a medieval world of grit and glory.",
+      cta_play: "Play Now",
+      cta_register: "Create Account",
+      cta_login: "Access Account",
+      features_title: "Command the Frontier",
+      feature_1_title: "Deep Strategy",
+      feature_1_desc: "Manage 15+ building types and complex resource chains to fuel your war machine.",
+      feature_2_title: "Vast World",
+      feature_2_desc: "Navigate a massive persistent map and claim your place among thousands of players.",
+      feature_3_title: "Tactical Warfare",
+      feature_3_desc: "Command specialized units from humble Pikemen to devastating Noblemen.",
+      announcements_title: "Latest News",
+      premium_title: "Premium Experience",
+      premium_desc: "Support development and get access to advanced management tools and prestige ranks.",
     }
   },
   pl: {
@@ -176,6 +193,23 @@ export const translations = {
       marching: "Wymarsz",
       returning: "Powrót",
       viewVillages: "Zobacz wioski",
+    },
+    landing: {
+      hero_title: "Zbuduj Imperium. Podbij Królestwo.",
+      hero_subtitle: "Lechia Online: Wielka strategia w średniowiecznym świecie pełnym chwały i trudów.",
+      cta_play: "Graj Teraz",
+      cta_register: "Stwórz Konto",
+      cta_login: "Zaloguj Się",
+      features_title: "Dowódź na Pograniczu",
+      feature_1_title: "Głęboka Strategia",
+      feature_1_desc: "Zarządzaj ponad 15 typami budynków i złożonymi łańcuchami produkcji.",
+      feature_2_title: "Wielki Świat",
+      feature_2_desc: "Nawiguj po ogromnej mapie i wywalcz swoje miejsce wśród tysięcy graczy.",
+      feature_3_title: "Taktyczna Wojna",
+      feature_3_desc: "Dowódź wyspecjalizowanymi jednostkami, od Pikinierów po Szlachciców.",
+      announcements_title: "Najnowsze Wiadomości",
+      premium_title: "Doświadczenie Premium",
+      premium_desc: "Wspieraj rozwój i zyskaj dostęp do zaawansowanych narzędzi oraz prestiżowych rang.",
     }
   }
 };

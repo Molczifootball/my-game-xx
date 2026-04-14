@@ -10,7 +10,7 @@ import SidebarLeft from "@/components/SidebarLeft";
 import ChatPanel from "@/components/ChatPanel";
 
 function isPublicPath(pathname: string): boolean {
-  return pathname === "/login" || pathname === "/register" || pathname === "/terms" || pathname === "/privacy" || pathname.startsWith("/api/");
+  return pathname === "/" || pathname === "/login" || pathname === "/register" || pathname === "/terms" || pathname === "/privacy" || pathname.startsWith("/api/");
 }
 
 export function GameShell({ children }: { children: React.ReactNode }) {
@@ -20,15 +20,20 @@ export function GameShell({ children }: { children: React.ReactNode }) {
 
   const isPublic = isPublicPath(pathname);
 
-  // Redirect to login if not authenticated and not on a public page
+  // Auth/Path logic
   useEffect(() => {
+    // Redirect unauthenticated from private paths to /login
     if (status === "unauthenticated" && !isPublic) {
       router.replace("/login");
     }
-  }, [status, isPublic, router]);
+    // Redirect authenticated from landing page (root) to the game dashboard
+    if (status === "authenticated" && pathname === "/") {
+      router.replace("/dashboard");
+    }
+  }, [status, isPublic, router, pathname]);
 
-  // Public pages (login/register) — no game shell
-  if (isPublic) {
+  // Public pages (landing, login, register) — no game shell
+  if (isPublic && pathname !== "/dashboard") {
     return <>{children}</>;
   }
 
