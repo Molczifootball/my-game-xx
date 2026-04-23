@@ -41,7 +41,7 @@ export default function Header() {
   const playerVillages = state.worldMap.filter(t => t.owner === state.playerName);
 
   const navLinks = [
-    { href: '/dashboard', label: t('ui.home') || 'Home', icon: '🏠' },
+    { href: '/dashboard', label: 'Home', icon: '🏠' },
     { href: '/village', label: t('ui.village'), icon: '🏰' },
     { href: '/map', label: t('ui.map'), icon: '🗺️' },
     { href: '/reports', label: t('ui.reports'), icon: '📜', badge: unseenCount },
