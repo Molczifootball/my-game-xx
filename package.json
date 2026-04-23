@@ -1,10 +1,10 @@
 {
   "name": "tribal-wars",
-  "version": "0.9.1",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma db push --accept-data-loss && next build",
+    "build": "prisma generate && next build",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint"
@@ -16,6 +16,7 @@
     "@vercel/analytics": "^2.0.1",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.1",
+    "lucide-react": "^1.8.0",
     "next": "16.2.2",
     "next-auth": "^5.0.0-beta.30",
     "pg": "^8.20.0",

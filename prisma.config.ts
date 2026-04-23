@@ -10,6 +10,5 @@ export default defineConfig({
   },
   datasource: {
     url: process.env["SUPABASE_DATABASE_URL"],
-    directUrl: process.env["SUPABASE_DIRECT_URL"],
   },
 });
