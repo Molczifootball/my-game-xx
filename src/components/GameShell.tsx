@@ -33,7 +33,7 @@ export function GameShell({ children }: { children: React.ReactNode }) {
   }, [status, isPublic, router, pathname]);
 
   // Public pages (landing, login, register) — no game shell
-  if (isPublic && pathname !== "/dashboard") {
+  if (isPublic) {
     return <>{children}</>;
   }
 

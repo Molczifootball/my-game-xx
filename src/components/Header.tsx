@@ -41,7 +41,8 @@ export default function Header() {
   const playerVillages = state.worldMap.filter(t => t.owner === state.playerName);
 
   const navLinks = [
-    { href: '/', label: t('ui.village'), icon: '🏰' },
+    { href: '/dashboard', label: t('ui.home') || 'Home', icon: '🏠' },
+    { href: '/village', label: t('ui.village'), icon: '🏰' },
     { href: '/map', label: t('ui.map'), icon: '🗺️' },
     { href: '/reports', label: t('ui.reports'), icon: '📜', badge: unseenCount },
     { href: '/rankings', label: t('ui.rankings'), icon: '🏆' },
@@ -54,7 +55,7 @@ export default function Header() {
         {/* Left: Logo + Nav */}
         <div className="flex items-center gap-1 lg:gap-2">
           {/* Logo */}
-          <Link href="/" className="group flex items-center gap-3 hover:brightness-110 transition-all py-1">
+          <Link href="/dashboard" className="group flex items-center gap-3 hover:brightness-110 transition-all py-1">
             {/* The Banner: Lechitic Shield with Eagle */}
             <div className="relative w-9 h-10 flex items-center justify-center">
               {/* Shield Shape */}

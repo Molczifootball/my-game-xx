@@ -45,7 +45,7 @@ export default function RegisterPage() {
       if (result?.error) {
         setError('Account created but login failed. Try signing in.');
       } else {
-        router.push('/');
+        router.push('/dashboard');
         router.refresh();
       }
     } catch {
